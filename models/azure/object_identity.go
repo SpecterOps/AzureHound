@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/certmichelin/azurehound/v2/enums"
 
 // Represents an identity used to sign in to a user account. An identity can be provided by Microsoft (a.k.a. local
 // account), by organizations, or by 3rd party identity providers such as Facebook or Google that are tied to a user

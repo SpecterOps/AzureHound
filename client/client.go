@@ -26,12 +26,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/certmichelin/azurehound/v2/client/config"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/client/rest"
+	"github.com/certmichelin/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/panicrecovery"
+	"github.com/certmichelin/azurehound/v2/pipeline"
 )
 
 func NewClient(config config.Config) (AzureClient, error) {

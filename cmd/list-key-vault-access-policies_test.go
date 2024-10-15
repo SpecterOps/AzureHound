@@ -21,9 +21,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/client/mocks"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/mocks"
+	"github.com/certmichelin/azurehound/v2/models"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 	"go.uber.org/mock/gomock"
 )
 

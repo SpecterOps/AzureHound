@@ -18,7 +18,7 @@
 package azure
 
 import (
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/enums"
 )
 
 // Properties of the vault

@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 )
 
 // ListAzureContainerRegistries https://learn.microsoft.com/en-us/rest/api/containerregistry/registries/list?view=rest-containerregistry-2023-01-01-preview

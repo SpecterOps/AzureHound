@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 )
 
 // ListAzureKeyVaults https://learn.microsoft.com/en-us/rest/api/keyvault/keyvault/vaults/list-by-subscription?view=rest-keyvault-keyvault-2019-09-01

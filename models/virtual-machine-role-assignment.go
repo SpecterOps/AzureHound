@@ -17,7 +17,7 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import "github.com/certmichelin/azurehound/v2/models/azure"
 
 type VirtualMachineRoleAssignment struct {
 	RoleAssignment   azure.RoleAssignment `json:"roleAssignment"`

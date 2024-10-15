@@ -40,15 +40,15 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/net/proxy"
 
-	"github.com/bloodhoundad/azurehound/v2/client"
-	client_config "github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/logger"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
-	"github.com/bloodhoundad/azurehound/v2/sinks"
+	"github.com/certmichelin/azurehound/v2/client"
+	client_config "github.com/certmichelin/azurehound/v2/client/config"
+	"github.com/certmichelin/azurehound/v2/client/rest"
+	"github.com/certmichelin/azurehound/v2/config"
+	"github.com/certmichelin/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/logger"
+	"github.com/certmichelin/azurehound/v2/models"
+	"github.com/certmichelin/azurehound/v2/pipeline"
+	"github.com/certmichelin/azurehound/v2/sinks"
 )
 
 func exit(err error) {

@@ -21,8 +21,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/certmichelin/azurehound/v2/config"
+	"github.com/certmichelin/azurehound/v2/constants"
 )
 
 var (

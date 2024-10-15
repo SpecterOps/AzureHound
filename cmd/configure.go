@@ -36,8 +36,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/config"
+	"github.com/certmichelin/azurehound/v2/enums"
 	"github.com/gofrs/uuid"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"

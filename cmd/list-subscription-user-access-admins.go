@@ -25,12 +25,12 @@ import (
 	"path"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client"
-	"github.com/bloodhoundad/azurehound/v2/constants"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/certmichelin/azurehound/v2/client"
+	"github.com/certmichelin/azurehound/v2/constants"
+	"github.com/certmichelin/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/models"
+	"github.com/certmichelin/azurehound/v2/panicrecovery"
+	"github.com/certmichelin/azurehound/v2/pipeline"
 	"github.com/spf13/cobra"
 )
 

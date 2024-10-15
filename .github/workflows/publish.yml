@@ -31,7 +31,7 @@ jobs:
           cache: true
 
       - name: Build
-        run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=${{ github.ref_name }}"'
+        run: 'go build -ldflags="-s -w -X github.com/certmichelin/azurehound/v2/constants.Version=${{ github.ref_name }}"'
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}

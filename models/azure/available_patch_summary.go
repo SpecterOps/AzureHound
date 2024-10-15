@@ -18,7 +18,7 @@
 package azure
 
 import (
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/enums"
 )
 
 // Describes the properties of a virtual machine instance view for available patch summary.

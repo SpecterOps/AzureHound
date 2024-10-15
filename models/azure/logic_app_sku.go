@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/certmichelin/azurehound/v2/enums"
 
 type LogicAppSku struct {
 	Name enums.SkuName     `json:"name,omitempty"`

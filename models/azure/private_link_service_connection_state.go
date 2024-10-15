@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/certmichelin/azurehound/v2/enums"
 
 // An object that represents the approval state of the private link connection.
 type PrivateLinkServiceConnectionState struct {

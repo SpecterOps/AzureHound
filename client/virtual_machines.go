@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 )
 
 // ListAzureVirtualMachines https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/list-all?view=rest-compute-2021-07-01

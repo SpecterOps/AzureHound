@@ -20,8 +20,8 @@ package client
 import (
 	"context"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 )
 
 // ListAzureSubscriptions https://learn.microsoft.com/en-us/rest/api/subscription/subscriptions/list?view=rest-subscription-2020-01-01

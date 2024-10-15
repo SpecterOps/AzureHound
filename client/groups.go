@@ -22,9 +22,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/constants"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/certmichelin/azurehound/v2/client/query"
+	"github.com/certmichelin/azurehound/v2/constants"
+	"github.com/certmichelin/azurehound/v2/models/azure"
 )
 
 // ListAzureADGroups https://learn.microsoft.com/en-us/graph/api/group-list?view=graph-rest-beta

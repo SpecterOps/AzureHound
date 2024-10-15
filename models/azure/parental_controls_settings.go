@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/certmichelin/azurehound/v2/enums"
 
 // Specifies parental control settings for an application. These settings control the consent experience.
 // For more detail see https://docs.microsoft.com/en-us/graph/api/resources/parentalcontrolsettings?view=graph-rest-1.0

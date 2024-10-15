@@ -25,12 +25,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client"
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/certmichelin/azurehound/v2/client"
+	"github.com/certmichelin/azurehound/v2/config"
+	"github.com/certmichelin/azurehound/v2/enums"
+	"github.com/certmichelin/azurehound/v2/models"
+	"github.com/certmichelin/azurehound/v2/panicrecovery"
+	"github.com/certmichelin/azurehound/v2/pipeline"
 	"github.com/spf13/cobra"
 )
 
@@ -70,7 +70,7 @@ func listStorageContainers(ctx context.Context, client client.AzureClient, stora
 		// Decreasing the demuxxer size only here is sufficient to prevent the cascade
 		// The error message with higher values for size is
 		// "The request was throttled."
-		// See issue #7: https://github.com/bloodhoundad/azurehound/issues/7
+		// See issue #7: https://github.com/certmichelin/azurehound/issues/7
 		streams = pipeline.Demux(ctx.Done(), ids, config.ColStreamCount.Value().(int))
 		wg      sync.WaitGroup
 	)
