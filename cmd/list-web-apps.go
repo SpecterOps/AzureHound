@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -107,14 +108,19 @@ func listWebApps(ctx context.Context, client client.AzureClient, subscriptions <
 							ResourceGroupName: item.Ok.ResourceGroupName(),
 							TenantId:          client.TenantInfo().TenantId,
 						}
-						if webApp.Kind == "app" {
-							log.V(2).Info("found web app", "webApp", webApp)
-							count++
-							if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
-								Kind: enums.KindAZWebApp,
-								Data: webApp,
-							}); !ok {
-								return
+						kinds := strings.Split(webApp.Kind, ",")
+						for _, kind := range kinds {
+							kind = strings.TrimSpace(kind)
+							if strings.EqualFold(kind, "app") {
+								log.V(2).Info("found web app", "webApp", webApp)
+								count++
+								if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
+									Kind: enums.KindAZWebApp,
+									Data: webApp,
+								}); !ok {
+									return
+								}
+								break
 							}
 						}
 					}
