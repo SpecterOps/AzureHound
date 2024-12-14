@@ -40,19 +40,19 @@ func (s Token) String() string {
 
 func (s *Token) UnmarshalJSON(data []byte) error {
 	var res struct {
-		AccessToken  string `json:"access_token"`   // The token to use in calls to Microsoft Graph API
-		ExpiresIn    int    `json:"expires_in"`     // How long the access token is valid in seconds
-		ExtExpiresIn int    `json:"ext_expires_in"` // How long the access token is valid in seconds
-		TokenType    string `json:"token_type"`     // Indicates the token type value. The only type currently supported by Azure AD is `bearer`
+		AccessToken  string `json:"access_token"`   			// The token to use in calls to Microsoft Graph API
+		ExpiresIn    IntOrStringInt   `json:"expires_in"`     	// How long the access token is valid in seconds (sometime a string of digits, sometimes an int)
+		ExtExpiresIn IntOrStringInt    `json:"ext_expires_in"` 	// How long the access token is valid in seconds (sometime a string of digits, sometimes an int)
+		TokenType    string `json:"token_type"`     			// Indicates the token type value. The only type currently supported by Azure AD is `bearer`
 	}
 
 	if err := json.Unmarshal(data, &res); err != nil {
 		return err
-	} else {
-		s.accessToken = res.AccessToken
-		s.expiresIn = res.ExpiresIn
-		s.extExpiresIn = res.ExtExpiresIn
-		s.expires = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
-		return nil
 	}
+	s.accessToken = res.AccessToken
+	s.expiresIn = int(res.ExpiresIn)
+	s.extExpiresIn = int(res.ExtExpiresIn)
+	s.expires = time.Now().Add(time.Duration(int(res.ExpiresIn)) * time.Second)
+		
+	return nil
 }

@@ -28,6 +28,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -149,4 +150,29 @@ func CopyBody(req *http.Request) ([]byte, error) {
 		}
 	}
 	return body, err
+}
+
+// Authentication response expires_in may be a string of digits or just an int
+type IntOrStringInt int
+
+func (ios *IntOrStringInt) UnmarshalJSON(data []byte) error {
+    // Try unmarshalling as an int first
+    var i int
+    if err := json.Unmarshal(data, &i); err == nil {
+        *ios = IntOrStringInt(i)
+        return nil
+    }
+
+    // If that fails, try unmarshalling as a string
+    var s string
+    if err := json.Unmarshal(data, &s); err == nil {
+        val, convErr := strconv.Atoi(s)
+        if convErr != nil {
+            return convErr
+        }
+        *ios = IntOrStringInt(val)
+        return nil
+    }
+
+    return fmt.Errorf("unable to unmarshal IntOrStringInt field: %s", string(data))
 }
