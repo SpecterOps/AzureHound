@@ -114,6 +114,8 @@ func configure() error {
 				config.AzUsername.Set(upn)
 				config.AzPassword.Set(password)
 			}
+		} else if authMethod == enums.ManagedIdentity {
+			config.AzUseManagedIdentity.Set(true)
 		} else if secret, err := prompt("Client Secret", nil, true); err != nil {
 			return err
 		} else {
