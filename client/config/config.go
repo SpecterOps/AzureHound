@@ -34,6 +34,7 @@ type Config struct {
 	JWT            string   // The JSON web token that will be used to authenticate requests sent to Azure APIs
 	Management     string   // The Azure ResourceManager URL
 	MgmtGroupId    []string // The Management Group Id to use as a filter
+	ManagedIdentity bool     // If true then the client will use a managed identity to authenticate to Azure APIs
 	Password       string   // The password associated with the user principal name associated with the Azure portal.
 	ProxyUrl       string   // The forward proxy url
 	RefreshToken   string   // The refresh token that will be used to authenticate requests sent to Azure APIs

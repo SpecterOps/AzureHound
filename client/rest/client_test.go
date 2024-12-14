@@ -50,7 +50,8 @@ func TestClosedConnection(t *testing.T) {
 
 		// make request in separate goroutine so its not blocking after we validated the retry
 		go func() {
-			client.Authenticate() // Authenticate() because it uses the internal client.send method.
+			req := httptest.NewRequest("GET", testServer.URL, nil)
+			client.AddAuthenticationToRequest(req) // Authenticate() because it uses the internal client.send method.
 			// CloseClientConnections should block the request from completing, however if it completes then the test fails.
 			requestCompleted = true
 		}()

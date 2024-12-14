@@ -46,6 +46,8 @@ func (s Config) Value() interface{} {
 		return viper.GetStringSlice(s.Name)
 	case reflect.Int:
 		return viper.GetInt(s.Name)
+	case reflect.Bool:
+		return viper.GetBool(s.Name)
 	default:
 		return viper.Get(s.Name)
 	}

@@ -236,6 +236,14 @@ var (
 		Default:    []string{},
 	}
 
+	AzUseManagedIdentity = Config{
+		Name:       "managed-identity",
+		Shorthand:  "",
+		Usage:      "If true then authentication is done via managed identity (default false).",
+		Persistent: true,
+		Default:    bool(false),
+	}
+
 	// BHE Configurations
 	BHEUrl = Config{
 		Name:       "instance",
@@ -351,6 +359,7 @@ var (
 		AzPassword,
 		AzSubId,
 		AzMgmtGroupId,
+		AzUseManagedIdentity,
 	}
 
 	BloodHoundEnterpriseConfig = []Config{

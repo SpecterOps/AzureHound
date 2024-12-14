@@ -23,6 +23,7 @@ const (
 	Certificate      string = "Certificate"
 	Secret           string = "Client Secret"
 	UsernamePassword string = "Username and Password"
+	ManagedIdentity  string = "Azure Managed Identity"
 )
 
 func AuthMethods() []AuthMethod {
@@ -30,5 +31,6 @@ func AuthMethods() []AuthMethod {
 		Certificate,
 		Secret,
 		UsernamePassword,
+		ManagedIdentity,
 	}
 }
