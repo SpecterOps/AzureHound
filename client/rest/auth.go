@@ -70,6 +70,7 @@ type GenericAuthStrategy struct {
 	token         Token
 }
 
+// NewManagedIdentityAuthenticator creates a new Authenticator using the ManagedIdentityAuthStrategy
 func NewManagedIdentityAuthenticator(config config.Config, auth *url.URL, api *url.URL, http *http.Client) *Authenticator {
 	return &Authenticator{
 		auth: &ManagedIdentityAuthStrategy{
@@ -82,6 +83,7 @@ func NewManagedIdentityAuthenticator(config config.Config, auth *url.URL, api *u
 	}
 }
 
+// NewGenericAuthenticator creates a new Authenticator using the GenericAuthStrategy (The collection of pre-existing authentication methods)
 func NewGenericAuthenticator(config config.Config, auth *url.URL, api *url.URL) *Authenticator {
 	return &Authenticator{
 		auth: &GenericAuthStrategy{config: config,
