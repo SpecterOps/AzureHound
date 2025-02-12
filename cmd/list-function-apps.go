@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -102,7 +103,7 @@ func listFunctionApps(ctx context.Context, client client.AzureClient, subscripti
 							ResourceGroupName: item.Ok.ResourceGroupName(),
 							TenantId:          client.TenantInfo().TenantId,
 						}
-						if functionApp.Kind == "functionapp" {
+						if strings.Contains(functionApp.Kind, "functionapp") {
 							log.V(2).Info("found function app", "functionApp", functionApp)
 							count++
 							if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
