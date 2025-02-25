@@ -1,16 +1,14 @@
 name: Publish
 
 on:
-  push: 
+  push:
     tags:
-      - "v*.*.*"
-
+      - v*.*.*
+env:
+  AZUREHOUND_VERSION: ${{ github.ref_name }}
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     strategy:
       matrix:
         os:
@@ -21,7 +19,7 @@ jobs:
           - amd64
           - arm64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Go
         uses: actions/setup-go@v3
@@ -31,10 +29,17 @@ jobs:
           cache: true
 
       - name: Build
-        run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=${{ github.ref_name }}"'
+        run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=${{ env.AZUREHOUND_VERSION }}"'
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
+
+      - name: Upload as Artifact
+        if: matrix.os == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: azurehound-bin-${{ matrix.os }}-${{ matrix.arch }}
+          path: azurehound*
 
       - name: Zip
         run: 7z a -tzip -mx9 azurehound-${{ matrix.os }}-${{ matrix.arch }}.zip azurehound*
@@ -49,22 +54,76 @@ jobs:
             azurehound-${{ matrix.os }}-${{ matrix.arch }}.zip
             azurehound-${{ matrix.os }}-${{ matrix.arch }}.zip.sha256
 
+  sign:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.BHE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.BHE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: azurehound-bin-*
+          path: unsigned/
+
+      - name: Install osslsigncode
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osslsigncode
+
+      - name: Sign Artifacts
+        env:
+          CODE_SIGN_CHAIN: ${{ secrets.CODE_SIGN_CHAIN }}
+          CODE_SIGN_KEY: ${{ secrets.CODE_SIGN_KEY }}
+        run: |
+          set -ex
+
+          # osslsigncode demands certs and key as file
+          CERT_FILE=$(mktemp)
+          KEY_FILE=$(mktemp)
+          printenv CODE_SIGN_CHAIN > $CERT_FILE
+          printenv CODE_SIGN_KEY > $KEY_FILE
+
+          trap 'rm $CERT_FILE $KEY_FILE' EXIT
+
+          mkdir signed
+          for artifact in unsigned/azurehound-bin-*/azurehound*; do
+            tgt=$(echo "$artifact" | sed -E 's%.*-([^-]*)/azurehound(.*)%azurehound-\1\2%')
+            osslsigncode sign \
+              -certs $CERT_FILE \
+              -key $KEY_FILE \
+              -n AzureHound \
+              -i https://www.specterops.io/ \
+              -in "$artifact" \
+              -out "signed/${tgt}"
+          done
+
+      - name: Verify Signed Artifacts
+        run: |
+          for artifact in signed/azurehound*; do
+            osslsigncode verify "$artifact"
+          done
+
+      - name: Upload Artifacts to S3
+        run: |
+          aws s3 cp --recursive signed/ s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-signed/${AZUREHOUND_VERSION}/
+
   containerize:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    defaults:
-      run:
-        shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.PACKAGE_SCOPE }}
 
       - name: Extract metadata
         id: meta
@@ -76,10 +135,12 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},prefix=v
 
       - name: Build Container Image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           build-args: VERSION=${{ github.ref_name }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}

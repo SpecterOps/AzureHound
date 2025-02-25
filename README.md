@@ -48,6 +48,13 @@ go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Vers
 ❯ azurehound list -u "$USERNAME" -p "$PASSWORD" -t "$TENANT" -o "mytenant.json"
 ```
 
+**Print all Azure Tenant data to file, reusing your existing authentication from the Azure CLI**
+
+```
+❯ JWT=$(az account get-access-token --resource https://graph.microsoft.com | jq -r .accessToken)
+❯ azurehound list --jwt "$JWT"
+```
+
 **Configure and start data collection service for BloodHound Enterprise**
 
 ```sh
