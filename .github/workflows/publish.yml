@@ -55,7 +55,7 @@ jobs:
             azurehound-${{ matrix.os }}-${{ matrix.arch }}.zip.sha256
 
   sign:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # INFO: https://docs.digicert.com/en/digicert-keylocker/code-signing/sign-with-third-party-signing-tools/windows-applications/sign-authenticode-files-with-osslsigncode-using-openssl-pkcs11-engine.html#a-note-for-ubuntu-users-488674
     needs: build
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
@@ -69,42 +69,57 @@ jobs:
           pattern: azurehound-bin-*
           path: unsigned/
 
-      - name: Install osslsigncode
+      - name: Install osslsigncode & pkcs11 engine
         run: |
           sudo apt-get update
-          sudo apt-get install -y osslsigncode
+          sudo apt-get install -y osslsigncode libengine-pkcs11-openssl
 
-      - name: Sign Artifacts
-        env:
-          CODE_SIGN_CHAIN: ${{ secrets.CODE_SIGN_CHAIN }}
-          CODE_SIGN_KEY: ${{ secrets.CODE_SIGN_KEY }}
+      - name: Install DigiCert Client Tools
+        id: digicert
+        uses: digicert/ssm-code-signing@v1.0.0
+
+      - name: Set PKCS#11 Paths
+        id: pkcs11
         run: |
-          set -ex
+          SM_TOOLS_DIR=$(dirname "$(realpath '${{ steps.digicert.outputs.PKCS11_CONFIG }}')")
+          echo "module=${SM_TOOLS_DIR}/smpkcs11.so" >> "$GITHUB_OUTPUT"
+          LIB_PKCS11="$(dpkg -L libengine-pkcs11-openssl | grep "libpkcs11.so")"
+          echo "engine=$LIB_PKCS11" >> "$GITHUB_OUTPUT"
 
-          # osslsigncode demands certs and key as file
-          CERT_FILE=$(mktemp)
-          KEY_FILE=$(mktemp)
-          printenv CODE_SIGN_CHAIN > $CERT_FILE
-          printenv CODE_SIGN_KEY > $KEY_FILE
-
-          trap 'rm $CERT_FILE $KEY_FILE' EXIT
+      - name: Sign Artifacts via DigiCert Signing Manager
+        env:
+          SM_HOST: ${{ secrets.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+        shell: bash
+        run: |
+          export SM_CLIENT_CERT_FILE=$(mktemp)
+          printenv SM_CLIENT_CERT_FILE_B64 | base64 --decode > "$SM_CLIENT_CERT_FILE"
+          trap 'rm $SM_CLIENT_CERT_FILE' EXIT
 
           mkdir signed
           for artifact in unsigned/azurehound-bin-*/azurehound*; do
             tgt=$(echo "$artifact" | sed -E 's%.*-([^-]*)/azurehound(.*)%azurehound-\1\2%')
-            osslsigncode sign \
-              -certs $CERT_FILE \
-              -key $KEY_FILE \
-              -n AzureHound \
-              -i https://www.specterops.io/ \
-              -in "$artifact" \
-              -out "signed/${tgt}"
+            smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$artifact" --openssl-pkcs11-engine "${{ steps.pkcs11.outputs.engine }}" --pkcs11-module "${{ steps.pkcs11.outputs.module }}" --tool osslsigncode --verbose
+            mv "$artifact" "signed/$tgt"
           done
 
       - name: Verify Signed Artifacts
+        env:
+          SM_HOST: ${{ secrets.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+        shell: bash
         run: |
+          export SM_CLIENT_CERT_FILE=$(mktemp)
+          printenv SM_CLIENT_CERT_FILE_B64 | base64 --decode > "$SM_CLIENT_CERT_FILE"
+          smctl certificate download --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --format pem --chain --name cert-chain.pem
+          trap 'rm $SM_CLIENT_CERT_FILE cert-chain.pem' EXIT
+
           for artifact in signed/azurehound*; do
-            osslsigncode verify "$artifact"
+            osslsigncode verify -CAfile cert-chain.pem "$artifact"
           done
 
       - name: Upload Artifacts to S3
