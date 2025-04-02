@@ -6,6 +6,7 @@ on:
       - v*.*.*
 env:
   AZUREHOUND_VERSION: ${{ github.ref_name }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +19,10 @@ jobs:
         arch:
           - amd64
           - arm64
+
+    env:
+      FILE_NAME: AzureHound_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -34,25 +39,32 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
 
+      - name: Rename Build Artifacts
+        run: |
+          for artifact in azurehound*; do
+            tgt=$(echo "$artifact" | sed -E 's%azurehound.*(\..*)%${{ env.FILE_NAME }}\1%')
+            mv $artifact $tgt
+          done
+
       - name: Upload as Artifact
         if: matrix.os == 'windows'
         uses: actions/upload-artifact@v4
         with:
           name: azurehound-bin-${{ matrix.os }}-${{ matrix.arch }}
-          path: azurehound*
+          path: AzureHound_*
 
       - name: Zip
-        run: 7z a -tzip -mx9 AzureHound_${{ env.AZUREHOUND_VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.zip azurehound*
+        run: 7z a -tzip -mx9 ${{ env.FILE_NAME }}.zip AzureHound_*
 
       - name: Compute Checksum
-        run: sha256sum AzureHound_${{ env.AZUREHOUND_VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.zip > AzureHound_${{ env.AZUREHOUND_VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.zip.sha256
+        run: sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            AzureHound_${{ env.AZUREHOUND_VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.zip
-            AzureHound_${{ env.AZUREHOUND_VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.zip.sha256
+            ${{ env.FILE_NAME }}.zip
+            ${{ env.FILE_NAME }}.zip.sha256
 
   sign:
     runs-on: ubuntu-latest
@@ -90,8 +102,8 @@ jobs:
           trap 'rm $CERT_FILE $KEY_FILE' EXIT
 
           mkdir signed
-          for artifact in unsigned/azurehound-bin-*/azurehound*; do
-            tgt=$(echo "$artifact" | sed -E 's%.*-([^-]*)-([^-]*)/azurehound(.*)%AzureHoundEnterprise_${{ env.AZUREHOUND_VERSION }}_\1_\2\3%')
+          for artifact in unsigned/azurehound-bin-*/AzureHound_*; do
+            tgt=$(echo "$artifact" | sed -E 's%.*/AzureHound_(.*)%AzureHoundEnterprise_\1%')
             osslsigncode sign \
               -certs $CERT_FILE \
               -key $KEY_FILE \
@@ -110,8 +122,8 @@ jobs:
       - name: Zip Exe
         run: |
           mkdir zipped
-          for artifact in signed/AzureHoundEnterprise_*.exe; do
-            tgt=$(echo "$artifact" | sed -E 's%signed/(.*)\.exe%zipped/\1\.zip%')
+          for artifact in signed/AzureHoundEnterprise_*; do
+            tgt=$(echo "$artifact" | sed -E 's%signed/(.*)\..*%zipped/\1\.zip%')
             7z a -tzip -mx9 $tgt $artifact
           done
 
