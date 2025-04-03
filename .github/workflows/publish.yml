@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload Artifacts to S3
         run: |
-          aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
+          aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-signed/${AZUREHOUND_VERSION}/
 
   containerize:
     runs-on: ubuntu-latest
