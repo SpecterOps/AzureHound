@@ -42,9 +42,7 @@ jobs:
       - name: Rename Build Artifacts
         run: |
           for artifact in azurehound*; do
-            echo $artifact
-            tgt=$(echo "$artifact" | sed -E 's%azurehound[^/*](\..*)%${{ env.FILE_NAME }}\1%')
-            echo $tgt
+            tgt=$(echo "$artifact" | sed -E 's%azurehound%${{ env.FILE_NAME }}%')
             mv $artifact $tgt
           done
 
