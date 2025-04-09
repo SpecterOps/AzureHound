@@ -138,7 +138,8 @@ jobs:
       - name: Zip Signed Executables
         run: |
           mkdir zipped
-          7z a -tzip -mx9 zipped/${{ env.FILE_NAME }}.zip signed/*
+          cd signed
+          7z a -tzip -mx9 ../zipped/${{ env.FILE_NAME }}.zip *
 
       - name: Checksum Zipped Files
         run: |
