@@ -122,6 +122,34 @@ func (mr *MockAzureClientMockRecorder) ListAzureADApps(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADApps", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADApps), arg0, arg1)
 }
 
+// ListAzureADGroup365Members mocks base method.
+func (m *MockAzureClient) ListAzureADGroup365Members(arg0 context.Context, arg1 string, arg2 query.GraphParams) <-chan client.AzureResult[json.RawMessage] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureADGroup365Members", arg0, arg1, arg2)
+	ret0, _ := ret[0].(<-chan client.AzureResult[json.RawMessage])
+	return ret0
+}
+
+// ListAzureADGroup365Members indicates an expected call of ListAzureADGroup365Members.
+func (mr *MockAzureClientMockRecorder) ListAzureADGroup365Members(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADGroup365Members", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADGroup365Members), arg0, arg1, arg2)
+}
+
+// ListAzureADGroup365Owners mocks base method.
+func (m *MockAzureClient) ListAzureADGroup365Owners(arg0 context.Context, arg1 string, arg2 query.GraphParams) <-chan client.AzureResult[json.RawMessage] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureADGroup365Owners", arg0, arg1, arg2)
+	ret0, _ := ret[0].(<-chan client.AzureResult[json.RawMessage])
+	return ret0
+}
+
+// ListAzureADGroup365Owners indicates an expected call of ListAzureADGroup365Owners.
+func (mr *MockAzureClientMockRecorder) ListAzureADGroup365Owners(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADGroup365Owners", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADGroup365Owners), arg0, arg1, arg2)
+}
+
 // ListAzureADGroupMembers mocks base method.
 func (m *MockAzureClient) ListAzureADGroupMembers(arg0 context.Context, arg1 string, arg2 query.GraphParams) <-chan client.AzureResult[json.RawMessage] {
 	m.ctrl.T.Helper()
@@ -162,6 +190,20 @@ func (m *MockAzureClient) ListAzureADGroups(arg0 context.Context, arg1 query.Gra
 func (mr *MockAzureClientMockRecorder) ListAzureADGroups(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADGroups", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADGroups), arg0, arg1)
+}
+
+// ListAzureADGroups365 mocks base method.
+func (m *MockAzureClient) ListAzureADGroups365(arg0 context.Context, arg1 query.GraphParams) <-chan client.AzureResult[azure.Group365] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureADGroups365", arg0, arg1)
+	ret0, _ := ret[0].(<-chan client.AzureResult[azure.Group365])
+	return ret0
+}
+
+// ListAzureADGroups365 indicates an expected call of ListAzureADGroups365.
+func (mr *MockAzureClientMockRecorder) ListAzureADGroups365(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADGroups365", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADGroups365), arg0, arg1)
 }
 
 // ListAzureADRoleAssignments mocks base method.
