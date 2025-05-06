@@ -45,6 +45,11 @@ jobs:
           name: azurehound-bin-${{ matrix.os }}-${{ matrix.arch }}
           path: azurehound*
 
+      - name: Create Executable Checksums
+        run: |
+          file=$(ls azurehound*)
+          sha256sum $file > ${file}.sha256
+
       - name: Zip
         run: 7z a -tzip -mx9 ${{ env.FILE_NAME }}.zip azurehound*
 
@@ -135,10 +140,17 @@ jobs:
             osslsigncode verify -CAfile cert-chain.pem "$artifact"
           done
 
+      - name: Create Executable Checksums
+        run: |
+          cd signed
+          file=$(ls azurehound*)
+          sha256sum $file > ${file}.sha256
+
       - name: Zip Signed Executables
         run: |
           mkdir zipped
-          7z a -tzip -mx9 zipped/${{ env.FILE_NAME }}.zip signed/*
+          cd signed
+          7z a -tzip -mx9 ../zipped/${{ env.FILE_NAME }}.zip *
 
       - name: Checksum Zipped Files
         run: |
