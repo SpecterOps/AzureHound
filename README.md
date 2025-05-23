@@ -2,21 +2,21 @@
 
 The BloodHound data collector for Microsoft Azure
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/BloodHoundAD/AzureHound/build.yml)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/BloodHoundAD/AzureHound)
-![GitHub all releases](https://img.shields.io/github/downloads/BloodHoundAD/AzureHound/total)
-[![Documentation](https://img.shields.io/static/v1?label=&message=documentation&color=blue)](https://pkg.go.dev/github.com/bloodhoundad/azurehound)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/SpecterOps/AzureHound/build.yml)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/SpecterOps/AzureHound)
+![GitHub all releases](https://img.shields.io/github/downloads/SpecterOps/AzureHound/total)
+[![Documentation](https://img.shields.io/static/v1?label=&message=documentation&color=blue)](https://pkg.go.dev/github.com/SpecterOps/azurehound)
 
 ## Get AzureHound
 
 ### Release Binaries
 
-Download the appropriate binary for your platform from one of our [Releases](https://github.com/bloodhoundad/azurehound/releases).
+Download the appropriate binary for your platform from one of our [Releases](https://github.com/SpecterOps/azurehound/releases).
 
 #### Rolling Release
 
 The rolling release contains pre-built binaries that are automatically kept up-to-date with the `main` branch and can be downloaded from
-[here](https://github.com/bloodhoundad/azurehound/releases/tag/rolling).
+[here](https://github.com/SpecterOps/azurehound/releases/tag/rolling).
 
 > **Warning:** The rolling release may be unstable.
 
@@ -31,6 +31,12 @@ To build this project from source run the following:
 ```sh
 go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=`git describe tags --exact-match 2> /dev/null || git rev-parse HEAD`"
 ```
+
+## Documentation
+
+Please refer to the [BloodHound Community Edition documentation](https://bloodhound.specterops.io/home) for:
+- [AzureHound Community Edition](https://bloodhound.specterops.io/collect-data/ce-collection/azurehound)
+- [AzureHound Community Edition Flags](https://bloodhound.specterops.io/collect-data/ce-collection/azurehound-flags)
 
 ## Usage
 
@@ -69,9 +75,9 @@ go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Vers
 ```
 ❯ azurehound --help
 AzureHound vx.x.x
-Created by the BloodHound Enterprise team - https://bloodhoundenterprise.io
+Created by the BloodHound Enterprise team at SpecterOps - [https://bloodhoundenterprise.io](https://specterops.io/bloodhound-overview/)
 
-The official tool for collecting Azure data for BloodHound and BloodHound Enterprise
+The official tool for collecting Azure data for BloodHound Community Edition and BloodHound Enterprise
 
 Usage:
   azurehound [command]
