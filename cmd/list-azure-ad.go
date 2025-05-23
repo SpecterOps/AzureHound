@@ -111,6 +111,9 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 	// Enumerate AppRoleAssignments
 	appRoleAssignments := listAppRoleAssignments(ctx, client, servicePrincipals3)
 
+	//Enumerate unified role eligibility instances
+	unifiedRoleEligibilitySchedules := listRoleEligibilityScheduleInstances(ctx, client)
+
 	return pipeline.Mux(ctx.Done(),
 		appOwners,
 		appRoleAssignments,
@@ -126,5 +129,6 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 		servicePrincipals,
 		tenants,
 		users,
+		unifiedRoleEligibilitySchedules,
 	)
 }
