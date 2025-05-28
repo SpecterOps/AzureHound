@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/youmark/pkcs8"
 )
 
@@ -53,14 +53,14 @@ func NewClientAssertion(tokenUrl string, clientId string, clientCert string, sig
 	} else {
 		iat := time.Now()
 		exp := iat.Add(1 * time.Minute)
-		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
-			Audience:  tokenUrl,
-			ExpiresAt: exp.Unix(),
+		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.RegisteredClaims{
+			Audience:  []string{tokenUrl},
+			ExpiresAt: jwt.NewNumericDate(exp),
 			Issuer:    clientId,
-			Id:        jti.String(),
-			NotBefore: iat.Unix(),
+			ID:        jti.String(),
+			NotBefore: jwt.NewNumericDate(iat),
 			Subject:   clientId,
-			IssuedAt:  iat.Unix(),
+			IssuedAt:  jwt.NewNumericDate(iat),
 		})
 
 		token.Header = map[string]interface{}{
