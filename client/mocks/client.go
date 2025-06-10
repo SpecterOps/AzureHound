@@ -506,6 +506,20 @@ func (mr *MockAzureClientMockRecorder) ListAzureWebApps(ctx, subscriptionId any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureWebApps", reflect.TypeOf((*MockAzureClient)(nil).ListAzureWebApps), ctx, subscriptionId)
 }
 
+// ListRoleAssignmentPolicies mocks base method.
+func (m *MockAzureClient) ListRoleAssignmentPolicies(ctx context.Context, params query.GraphParams) <-chan client.AzureResult[azure.UnifiedRoleManagementPolicyAssignment] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRoleAssignmentPolicies", ctx, params)
+	ret0, _ := ret[0].(<-chan client.AzureResult[azure.UnifiedRoleManagementPolicyAssignment])
+	return ret0
+}
+
+// ListRoleAssignmentPolicies indicates an expected call of ListRoleAssignmentPolicies.
+func (mr *MockAzureClientMockRecorder) ListRoleAssignmentPolicies(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRoleAssignmentPolicies", reflect.TypeOf((*MockAzureClient)(nil).ListRoleAssignmentPolicies), ctx, params)
+}
+
 // ListRoleAssignmentsForResource mocks base method.
 func (m *MockAzureClient) ListRoleAssignmentsForResource(ctx context.Context, resourceId, filter, tenantId string) <-chan client.AzureResult[azure.RoleAssignment] {
 	m.ctrl.T.Helper()

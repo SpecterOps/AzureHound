@@ -17,7 +17,11 @@
 
 package models
 
+import "github.com/bloodhoundad/azurehound/v2/models/azure"
+
 type RoleManagementPolicyAssignment struct {
+	azure.UnifiedRoleManagementPolicyAssignment
+
 	Id                                                string   `json:"id,omitempty"`
 	RoleDefinitionId                                  string   `json:"roleDefinitionId,omitempty"`
 	EndUserAssignmentRequiresApproval                 bool     `json:"endUserAssignmentRequiresApproval,omitempty"`
