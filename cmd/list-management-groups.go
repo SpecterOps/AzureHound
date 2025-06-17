@@ -75,8 +75,7 @@ func listManagementGroups(ctx context.Context, client client.AzureClient) <-chan
 				count++
 				mgmtGroup := models.ManagementGroup{
 					ManagementGroup: item.Ok,
-					TenantId:        client.TenantInfo().TenantId,
-					TenantName:      client.TenantInfo().DisplayName,
+					TenantId:        item.Ok.Properties.TenantId,
 				}
 
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{

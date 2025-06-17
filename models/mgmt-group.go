@@ -23,6 +23,5 @@ import (
 
 type ManagementGroup struct {
 	azure.ManagementGroup
-	TenantId   string `json:"tenantId"`
-	TenantName string `json:"tenantName"`
+	TenantId string `json:"tenantId"`
 }

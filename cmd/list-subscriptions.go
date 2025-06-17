@@ -99,7 +99,7 @@ func listSubscriptions(ctx context.Context, client client.AzureClient) <-chan in
 				data := models.Subscription{
 					Subscription: item.Ok,
 				}
-				data.TenantId = client.TenantInfo().TenantId
+				data.TenantId = item.Ok.TenantId
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZSubscription,
 					Data: data,
