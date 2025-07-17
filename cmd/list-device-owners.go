@@ -77,7 +77,7 @@ func listDeviceOwners(ctx context.Context, client client.AzureClient, devices <-
 			if device, ok := result.(AzureWrapper).Data.(models.Device); !ok {
 				log.Error(fmt.Errorf("failed type assertion"), "unable to continue enumerating device owners", "result", result)
 			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, device.Id); !ok {
+				if ok := pipeline.Send(ctx.Done(), ids, device.ID); !ok {
 					return
 				}
 			}

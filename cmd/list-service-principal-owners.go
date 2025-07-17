@@ -78,7 +78,7 @@ func listServicePrincipalOwners(ctx context.Context, client client.AzureClient, 
 				log.Error(fmt.Errorf("failed type assertion"), "unable to continue enumerating service principal owners", "result", result)
 				return
 			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, servicePrincipal.Id); !ok {
+				if ok := pipeline.Send(ctx.Done(), ids, servicePrincipal.ID); !ok {
 					return
 				}
 			}
