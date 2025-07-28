@@ -69,12 +69,11 @@ func start(ctx context.Context) {
 	}()
 	defer gracefulShutdown(stop)
 
-	log.V(1).Info("testing connections")
 	if azClient := connectAndCreateClient(); azClient == nil {
 		exit(fmt.Errorf("azClient is unexpectedly nil"))
 	} else if bheInstance, err := url.Parse(config.BHEUrl.Value().(string)); err != nil {
 		exit(fmt.Errorf("unable to parse BHE url: %w", err))
-	} else if bheClient, err := bloodhound.NewBHEClient(*bheInstance); err != nil {
+	} else if bheClient, err := bloodhound.NewBHEClient(*bheInstance, config.BHETokenId.Value().(string), config.BHEToken.Value().(string), config.Proxy.Value().(string), config.BHEMaxReqPerConn.Value().(int), 3, log); err != nil {
 		exit(fmt.Errorf("failed to create new signing HTTP client: %w", err))
 	} else if updatedClient, err := bheClient.UpdateClient(ctx); err != nil {
 		exit(fmt.Errorf("failed to update client: %w", err))

@@ -272,6 +272,16 @@ var (
 		Default:    "",
 	}
 
+	BHEMaxReqPerConn = Config{
+		Name:      "maxReqsPerConn",
+		Shorthand: "",
+		Usage:     "The number of requests a single HTTP connection can make, when this limit is reached, a new HTTP connection will be established with the server",
+		Required:  false,
+		Default:   10_000,
+		MinValue:  1,
+		MaxValue:  10_000,
+	}
+
 	ColBatchSize = Config{
 		Name:       "batchSize",
 		Shorthand:  "",
@@ -366,6 +376,7 @@ var (
 		BHEUrl,
 		BHETokenId,
 		BHEToken,
+		BHEMaxReqPerConn,
 	}
 
 	CollectionConfig = []Config{
