@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/constants"
@@ -52,6 +53,7 @@ type BHEClient struct {
 	proxy               string
 	token               string
 	tokenId             string
+	mu                  sync.Mutex
 }
 
 // NewBHEClient creates a new BloodHoundClient using the values from the application's config
@@ -90,23 +92,23 @@ func (s *BHEClient) SendRequest(req *http.Request) (*http.Response, error) {
 	if body, err := rest.CopyBody(req); err != nil {
 		return nil, err
 	} else {
-		for currentAttept := 0; currentAttept <= s.maxRetries; currentAttept++ {
+		for currentAttempt := 0; currentAttempt <= s.maxRetries; currentAttempt++ {
 			// Reusing http.Request requires rewinding the request body
 			// back to a working state
-			if body != nil && currentAttept > 0 {
+			if body != nil && currentAttempt > 0 {
 				req.Body = io.NopCloser(bytes.NewBuffer(body))
 			}
 
 			if res, err = s.httpClient.Do(req); err != nil {
 				if rest.IsClosedConnectionErr(err) {
 					// try again on force closed connections
-					s.log.Error(err, fmt.Sprintf("remote host force closed connection while requesting %s; attempt %d/%d; trying again", req.URL, currentAttept+1, s.maxRetries))
-					rest.VariableExponentialBackoff(s.retryDelay, currentAttept)
+					s.log.Error(err, fmt.Sprintf("remote host force closed connection while requesting %s; attempt %d/%d; trying again", req.URL, currentAttempt+1, s.maxRetries))
+					rest.VariableExponentialBackoff(s.retryDelay, currentAttempt)
 					continue
 				} else if rest.IsGoAwayErr(err) {
-					// AWS currently has a 10,000 request per connection limitation, currentAttept in case AWS changes this limitation
-					s.log.Error(err, fmt.Sprintf("received GOAWAY from from AWS load balancer while requesting %s; attempt %d/%d; trying again", req.URL, currentAttept+1, s.maxRetries))
-					rest.VariableExponentialBackoff(s.retryDelay, currentAttept)
+					// AWS currently has a 10,000 request per connection limitation, currentAttempt in case AWS changes this limitation
+					s.log.Error(err, fmt.Sprintf("received GOAWAY from from AWS load balancer while requesting %s; attempt %d/%d; trying again", req.URL, currentAttempt+1, s.maxRetries))
+					rest.VariableExponentialBackoff(s.retryDelay, currentAttempt)
 					continue
 				}
 
@@ -116,13 +118,13 @@ func (s *BHEClient) SendRequest(req *http.Request) (*http.Response, error) {
 				if res.StatusCode >= http.StatusInternalServerError {
 					// Internal server error, backoff and try again.
 					serverError := fmt.Errorf("received server error %d while requesting %v", res.StatusCode, req.URL)
-					s.log.Error(serverError, fmt.Sprintf("attempt %d/%d; trying again", currentAttept+1, s.maxRetries))
+					s.log.Error(serverError, fmt.Sprintf("attempt %d/%d; trying again", currentAttempt+1, s.maxRetries))
 
-					rest.VariableExponentialBackoff(s.retryDelay, currentAttept)
+					rest.VariableExponentialBackoff(s.retryDelay, currentAttempt)
 					continue
 				}
 
-				// bad request we do not need to currentAttept
+				// bad request we do not need to currentAttempt
 				var body json.RawMessage
 				defer res.Body.Close()
 
@@ -132,7 +134,10 @@ func (s *BHEClient) SendRequest(req *http.Request) (*http.Response, error) {
 					return nil, fmt.Errorf("received unexpected response code from %v: %s %s", req.URL, res.Status, body)
 				}
 			} else {
+				s.mu.Lock()
 				s.currentRequestCount += 1
+				s.mu.Unlock()
+
 				if s.currentRequestCount >= s.requestLimit {
 					if err = s.resetConnection(); err != nil {
 						s.log.Error(err, "error resetting BHE http client connection")
@@ -392,8 +397,11 @@ func (s *BHEClient) resetConnection() error {
 		signature: BHEAuthSignature,
 	}
 
+	s.mu.Lock()
+	s.httpClient.CloseIdleConnections()
 	s.currentRequestCount = 0
 	s.httpClient = client
+	s.mu.Unlock()
 
 	return nil
 }
