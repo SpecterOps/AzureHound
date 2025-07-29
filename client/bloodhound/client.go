@@ -401,8 +401,9 @@ func (s *BHEClient) resetConnection() error {
 		signature: BHEAuthSignature,
 	}
 
-	s.mu.Lock()
 	s.httpClient.CloseIdleConnections()
+
+	s.mu.Lock()
 	s.currentRequestCount = 0
 	s.httpClient = client
 	s.mu.Unlock()

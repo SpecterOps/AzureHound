@@ -16,6 +16,7 @@ import (
 type HttpsDialer struct{}
 
 func (s HttpsDialer) Dial(network string, addr string) (net.Conn, error) {
+	// TODO: look into pinning this to TLS 1.2 to avoid downgraded TLS attacks
 	return tls.Dial(network, addr, &tls.Config{})
 }
 
