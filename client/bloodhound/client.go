@@ -114,7 +114,13 @@ func (s *BHEClient) SendRequest(req *http.Request) (*http.Response, error) {
 
 				// normal client error, dont attempt again
 				return nil, err
-			} else if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
+			}
+
+			if err := s.incrementRequest(); err != nil {
+				return nil, err
+			}
+
+			if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
 				if res.StatusCode >= http.StatusInternalServerError {
 					// Internal server error, backoff and try again.
 					serverError := fmt.Errorf("received server error %d while requesting %v", res.StatusCode, req.URL)
@@ -134,17 +140,6 @@ func (s *BHEClient) SendRequest(req *http.Request) (*http.Response, error) {
 					return nil, fmt.Errorf("received unexpected response code from %v: %s %s", req.URL, res.Status, body)
 				}
 			} else {
-				s.mu.Lock()
-				s.currentRequestCount += 1
-				s.mu.Unlock()
-
-				if s.currentRequestCount >= s.requestLimit {
-					if err = s.resetConnection(); err != nil {
-						s.log.Error(err, "error resetting BHE http client connection")
-						return nil, err
-					}
-				}
-
 				return res, nil
 			}
 		}
@@ -191,7 +186,9 @@ func (s *BHEClient) Ingest(ctx context.Context, in <-chan []any) bool {
 
 			for currentAttempt := 0; currentAttempt <= s.maxRetries; currentAttempt++ {
 				// No retries on regular err cases, only on HTTP 504 Gateway Timeout and HTTP 503 Service Unavailable
-				if response, err := s.httpClient.Do(req); err != nil {
+				response, err := s.httpClient.Do(req)
+
+				if err != nil {
 					if rest.IsClosedConnectionErr(err) {
 						// try again on force closed connection
 						s.log.Error(err, fmt.Sprintf("remote host force closed connection while requesting %s; attempt %d/%d; trying again", req.URL, currentAttempt+1, s.maxRetries))
@@ -220,7 +217,13 @@ func (s *BHEClient) Ingest(ctx context.Context, in <-chan []any) bool {
 
 					s.log.Error(err, unrecoverableErrMsg)
 					return true
-				} else if response.StatusCode == http.StatusGatewayTimeout || response.StatusCode == http.StatusServiceUnavailable || response.StatusCode == http.StatusBadGateway {
+				}
+
+				if err := s.incrementRequest(); err != nil {
+					return true
+				}
+
+				if response.StatusCode == http.StatusGatewayTimeout || response.StatusCode == http.StatusServiceUnavailable || response.StatusCode == http.StatusBadGateway {
 					serverError := fmt.Errorf("received server error %d while requesting %v; attempt %d/%d; trying again", response.StatusCode, endpoint, currentAttempt+1, s.maxRetries)
 					s.log.Error(serverError, "")
 
@@ -248,14 +251,15 @@ func (s *BHEClient) Ingest(ctx context.Context, in <-chan []any) bool {
 					}
 
 					return true
-				} else {
-					if err := response.Body.Close(); err != nil {
-						s.log.Error(fmt.Errorf("failed to close ingest body: %w", err), unrecoverableErrMsg)
-					}
+				}
+
+				if err := response.Body.Close(); err != nil {
+					s.log.Error(fmt.Errorf("failed to close ingest body: %w", err), unrecoverableErrMsg)
 				}
 			}
 		}
 	}
+
 	return hasErrors
 }
 
@@ -402,6 +406,22 @@ func (s *BHEClient) resetConnection() error {
 	s.currentRequestCount = 0
 	s.httpClient = client
 	s.mu.Unlock()
+
+	return nil
+}
+
+// incrementRequest will increment the current request count, if the current count reaches or exceeds the limit, the connection will be reset
+func (s *BHEClient) incrementRequest() error {
+	s.mu.Lock()
+	s.currentRequestCount += 1
+	s.mu.Unlock()
+
+	if s.currentRequestCount >= s.requestLimit {
+		if err := s.resetConnection(); err != nil {
+			s.log.Error(err, "error resetting BHE http client connection")
+			return err
+		}
+	}
 
 	return nil
 }
