@@ -547,3 +547,17 @@ func (mr *MockAzureClientMockRecorder) TenantInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TenantInfo", reflect.TypeOf((*MockAzureClient)(nil).TenantInfo))
 }
+
+// ListAzureADApps mocks base method.
+func (m *MockAzureClient) ListAzureOauth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan client.AzureResult[azure.Oauth2PermissionGrant] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureOauth2PermissionGrants", ctx, params)
+	ret0, _ := ret[0].(<-chan client.AzureResult[azure.Oauth2PermissionGrant])
+	return ret0
+}
+
+// ListAzureADApps indicates an expected call of ListAzureOauth2PermissionGrants.
+func (mr *MockAzureClientMockRecorder) ListAzureOauth2PermissionGrants(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureOauth2PermissionGrants", reflect.TypeOf((*MockAzureClient)(nil).ListAzureOauth2PermissionGrants), ctx, params)
+}
