@@ -79,7 +79,7 @@ func listRoleAssignments(ctx context.Context, client client.AzureClient, roles <
 				log.Error(fmt.Errorf("failed type assertion"), "unable to continue enumerating role assignments", "result", result)
 				return
 			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, role.Id); !ok {
+				if ok := pipeline.Send(ctx.Done(), ids, role.ID); !ok {
 					return
 				}
 			}
