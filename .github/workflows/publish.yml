@@ -163,9 +163,9 @@ jobs:
           password: ${{ secrets.PACKAGE_SCOPE }}
 
       - name: Log in to ACR
-        uses: azure/docker-login@v1
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          login-server: ${{ secrets.ACR_AZUREHOUND_REGISTRY_URL }}
+          registry: ${{ secrets.ACR_AZUREHOUND_REGISTRY_URL }}
           username: ${{ secrets.ACR_CLIENT_ID }}
           password: ${{ secrets.ACR_SECRET }}
 
