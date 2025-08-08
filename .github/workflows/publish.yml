@@ -175,7 +175,7 @@ jobs:
         with:
           images: |
             ghcr.io/bloodhoundad/azurehound
-            azurehoundregistry.azurecr.io/azurehound
+            ${{ secrets.ACR_AZUREHOUND_REGISTRY_URL }}/azurehound
           tags: |
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
