@@ -1,60 +1,61 @@
 **Steps to Deploy the SpecterOps AzureHound Managed Application from the Azure Marketplace**
 1. Log in to the Azure Portal
 2. In the Azure Portal, search and select Marketplace.
-3. Use the search bar to find SpecterOps AzureHound.
+3. Use the search bar to find **SpecterOps AzureHound**.
 <img width="773" height="660" alt="image10" src="https://github.com/user-attachments/assets/4e040def-01c8-4643-88f0-a7821ba55808" />
-
 
 4. From the search results, click on SpecterOps AzureHound to open the product page.
 5. Click the "Create" button to begin the deployment process.
-<img width="1023" height="791" alt="image11" src="https://github.com/user-attachments/assets/94e479b6-d5f3-41ab-acbd-4a15344b2cf9" />
+<img width="1023" height="791" alt="image11" src="https://github.com/user-attachments/assets/10fb6bfb-8c31-4682-9f42-2eeee3f873ce" />
+
 
 
 6. Configure Basic Settings :
-- Choose the Subscription under which to deploy the application.
-- Select or create a Resource Group.
-- Enter a Region for deployment.
-- Provide a name for your Managed Application, then click Next.
+- Choose the **Subscription** under which to deploy the application.
+- Select or create a **Resource Group**.
+- Enter a **Region** for deployment.
+- Provide a name for your **Managed Application**, then click Next.
+<img width="832" height="869" alt="image5" src="https://github.com/user-attachments/assets/786de45b-7506-4a2e-b0bb-dae1430404fe" />
 
-<img width="832" height="869" alt="image5" src="https://github.com/user-attachments/assets/3f2407fe-5918-471f-a684-898671ca97fd" />
 
-Steps to Register an Application in Microsoft Entra ID
-- Sign in to the Microsoft Entra Admin Center.
-- Navigate to Entra ID > App registrations.
-- Click + New registration.
-- Provide a meaningful Name for the application (e.g., azurehound-client-app).
-- Under Supported account types, select - Accounts in this organizational directory only.
-- Click Register to create the application.
+**Steps to Register an Application in Microsoft Entra ID**
+- Sign in to the **Microsoft Entra** Admin Center.
+- Navigate to **Entra ID** > **App registrations**.
+- Click - **New registration**.
+- Provide a meaningful Name for the Application (e.g., azurehound-client-app).
+- Under Supported account types, select - **Accounts in this organizational directory only**.
+- Click Register to create the Application.
 - Once registration is complete, you'll be redirected to the application’s Overview page.
-- Copy and save the Application (client) ID — you'll need it during deployment.
+- Copy and save the **Application (client) ID** — you'll need it during deployment.
 
- Create a new application secret
+ **Create a new Application Secret**
 - Select App registrations and select your application from the list.
-- Select Certificates & secrets.
+- Select **Certificates & secrets**.
 - Select Client secrets, and then Select New client secret.
 - Provide a description of the secret, and a duration.
-- Select Add.
+- Select **Add**.
 
-To obtain the BloodHound Token ID and Token Secret, follow these steps:
-- Log in to your BloodHound instance.
-- Navigate to Administration > Manage Clients.
-- Click Create Client to generate a new managed client.
-- Once created, copy the Token ID and Token Secret — these values will be used in the application deployment parameters.
+**To obtain the BloodHound Token ID and Token Secret, follow these steps:**
+- Log in to your **BloodHound instance**.
+- Navigate to **Administration** > **Manage Clients**.
+- Click Create Client to generate a new Managed Client.
+- Once created, copy the **Token ID** and **Token Secret** — these values will be used in the application deployment parameters.
 
 <img width="801" height="458" alt="image1" src="https://github.com/user-attachments/assets/7507863d-23f6-4ea6-861d-78c493a83837" />
 
 
-7. Fill in the required Azurehound Config Params:
-- Azure Tenant ID - Your Azure Tenant ID.
-- Azure Application ID - Register an application in Microsoft Entra ID, and grant it the Directory.Read.All, RoleManagement.Read.All API permissions and admin consent.
-<img width="1071" height="286" alt="image7" src="https://github.com/user-attachments/assets/906587fe-9fb4-4c77-b669-d6ac400fb5cf" />
+7. Fill in the required AzureHound Config Params:
+- **Azure Tenant ID** - Your Azure Tenant ID.
+- **Azure Application ID** - Register an application in Microsoft Entra ID, and grant it the Directory.Read.All, RoleManagement.Read.All API permissions and admin consent.
+
+<img width="1071" height="286" alt="image7" src="https://github.com/user-attachments/assets/aaca6471-2935-4725-afaf-fb057cd6fb6a" />
 
 
-- Azure Secret ID - Create a Client Secret for the registered app, and enter the secret value (not the ID).
-- BloodHound Instance Domain - Enter your BloodHound instance domain name
-- BloodHound Token ID - Enter the Managed Client Token ID.
-- BloodHound Token Secret -Enter the Managed Client Token Secret.
-- Azure Function Package - Enter URI to access Azure Function Package
+- **Azure Secret ID** - Create a Client Secret for the registered app, and enter the secret value (not the ID).
+- **BloodHound Instance Domain** - Enter your BloodHound instance domain name
+- **BloodHound Token ID** - Enter the Managed Client Token ID.
+- **BloodHound Token Secret** -Enter the Managed Client Token Secret.
+- **Azure Function Package** - Enter URI to access Azure Function Package
   https://saazurehounddev.blob.core.windows.net/azurefunction/containerRestartFunction.zip 
 
 8. Click Next, then Review + Create.
@@ -75,9 +76,10 @@ Click Edit Client > Configure the Collection Schedule based on your preferred ti
 
 After the deployment is finished, you can check your managed application's status.
 Navigate to the resource group you selected during the deployment. Under the Overview tab, you will find your deployed Managed Application listed among the resources.
-<img width="1334" height="533" alt="image6" src="https://github.com/user-attachments/assets/47976b83-3d66-4c96-8fd8-73605de0f794" />
 
-Click on your deployed Managed Application
+<img width="1334" height="533" alt="image6" src="https://github.com/user-attachments/assets/b0d5fb11-bcaa-47a8-a993-eceb63c7b3b7" />
+
+Click on your **deployed Managed Application**
 <img width="1187" height="658" alt="new-image-" src="https://github.com/user-attachments/assets/79b35322-4e80-434c-a1a9-1a8541619dc1" />
 Click on the Managed resource group, and you can see the resources deployed.
 
