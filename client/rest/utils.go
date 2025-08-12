@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -35,6 +36,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/youmark/pkcs8"
+	"golang.org/x/net/http2"
 )
 
 func Decode(body io.ReadCloser, v interface{}) error {
@@ -133,8 +135,19 @@ func IsClosedConnectionErr(err error) bool {
 	return closedFromClient || closedFromTestCase
 }
 
+// IsGoAwayErr determines if an error is an http2.GoAwayError
+func IsGoAwayErr(err error) bool {
+	var goAwayErr *http2.GoAwayError
+	return errors.As(err, &goAwayErr)
+}
+
 func ExponentialBackoff(retry int) {
 	backoff := math.Pow(5, float64(retry+1))
+	time.Sleep(time.Second * time.Duration(backoff))
+}
+
+func VariableExponentialBackoff(base, retry int) {
+	backoff := math.Pow(float64(base), float64(retry+1))
 	time.Sleep(time.Second * time.Duration(backoff))
 }
 
@@ -156,23 +169,23 @@ func CopyBody(req *http.Request) ([]byte, error) {
 type IntOrStringInt int
 
 func (ios *IntOrStringInt) UnmarshalJSON(data []byte) error {
-    // Try unmarshalling as an int first
-    var i int
-    if err := json.Unmarshal(data, &i); err == nil {
-        *ios = IntOrStringInt(i)
-        return nil
-    }
+	// Try unmarshalling as an int first
+	var i int
+	if err := json.Unmarshal(data, &i); err == nil {
+		*ios = IntOrStringInt(i)
+		return nil
+	}
 
-    // If that fails, try unmarshalling as a string
-    var s string
-    if err := json.Unmarshal(data, &s); err == nil {
-        val, convErr := strconv.Atoi(s)
-        if convErr != nil {
-            return convErr
-        }
-        *ios = IntOrStringInt(val)
-        return nil
-    }
+	// If that fails, try unmarshalling as a string
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		val, convErr := strconv.Atoi(s)
+		if convErr != nil {
+			return convErr
+		}
+		*ios = IntOrStringInt(val)
+		return nil
+	}
 
-    return fmt.Errorf("unable to unmarshal IntOrStringInt field: %s", string(data))
+	return fmt.Errorf("unable to unmarshal IntOrStringInt field: %s", string(data))
 }

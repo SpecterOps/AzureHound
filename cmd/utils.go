@@ -18,31 +18,20 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/tls"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"io/fs"
-	"net"
-	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime/pprof"
-	"time"
 
+	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/proxy"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
 	client_config "github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/config"
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/logger"
@@ -50,6 +39,11 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 	"github.com/bloodhoundad/azurehound/v2/sinks"
 )
+
+func init() {
+	proxy.RegisterDialerType("http", rest.NewProxyDialer)
+	proxy.RegisterDialerType("https", rest.NewProxyDialer)
+}
 
 func exit(err error) {
 	log.Error(err, "encountered unrecoverable error")
@@ -95,123 +89,14 @@ func gracefulShutdown(stop context.CancelFunc) {
 }
 
 func testConnections() error {
-	if _, err := dial(config.AzAuthUrl.Value().(string)); err != nil {
+	if _, err := rest.Dial(log, config.AzAuthUrl.Value().(string)); err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", config.AzAuthUrl.Value(), err)
-	} else if _, err := dial(config.AzGraphUrl.Value().(string)); err != nil {
+	} else if _, err := rest.Dial(log, config.AzGraphUrl.Value().(string)); err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", config.AzGraphUrl.Value(), err)
-	} else if _, err := dial(config.AzMgmtUrl.Value().(string)); err != nil {
+	} else if _, err := rest.Dial(log, config.AzMgmtUrl.Value().(string)); err != nil {
 		return fmt.Errorf("unable to connect to %s: %w", config.AzMgmtUrl.Value(), err)
 	} else {
 		return nil
-	}
-}
-
-type httpsDialer struct{}
-
-func (s httpsDialer) Dial(network string, addr string) (net.Conn, error) {
-	return tls.Dial(network, addr, &tls.Config{})
-}
-
-func newProxyDialer(url *url.URL, forward proxy.Dialer) (proxy.Dialer, error) {
-	dialer := &proxyDialer{
-		host:    url.Host,
-		forward: forward,
-	}
-
-	if url.User != nil {
-		dialer.user = url.User.Username()
-		dialer.pass, _ = url.User.Password()
-	}
-
-	return dialer, nil
-}
-
-type proxyDialer struct {
-	host    string
-	user    string
-	pass    string
-	forward proxy.Dialer
-}
-
-func (s proxyDialer) Dial(network string, addr string) (net.Conn, error) {
-	if s.forward == nil {
-		return nil, fmt.Errorf("unable to connect to %s: forward dialer not set", s.host)
-	} else if conn, err := s.forward.Dial(network, s.host); err != nil {
-		return nil, fmt.Errorf("unable to connect to %s: %w", s.host, err)
-	} else if req, err := http.NewRequest("CONNECT", "//"+addr, nil); err != nil {
-		conn.Close()
-		return nil, fmt.Errorf("unable to connect to %s: %w", addr, err)
-	} else {
-		req.Close = false
-		if s.user != "" {
-			req.SetBasicAuth(s.user, s.pass)
-		}
-
-		// Write request over proxy connection
-		if err := req.Write(conn); err != nil {
-			conn.Close()
-			return nil, fmt.Errorf("unable to connect to %s: %w", addr, err)
-		}
-
-		res, err := http.ReadResponse(bufio.NewReader(conn), req)
-		defer func() {
-			if res.Body != nil {
-				res.Body.Close()
-			}
-		}()
-
-		if err != nil {
-			conn.Close()
-			return nil, fmt.Errorf("unable to connect to %s: %w", addr, err)
-		} else if res.StatusCode != 200 {
-			if res.Body != nil {
-				res.Body.Close()
-			}
-			conn.Close()
-			return nil, fmt.Errorf("unable to connect to %s via proxy (%s): statusCode %d", addr, s.host, res.StatusCode)
-		} else {
-			return conn, nil
-		}
-	}
-}
-
-func getDialer() (proxy.Dialer, error) {
-	if proxyUrl := config.Proxy.Value().(string); proxyUrl == "" {
-		return proxy.Direct, nil
-	} else if url, err := url.Parse(proxyUrl); err != nil {
-		return nil, err
-	} else if url.Scheme == "https" {
-		return proxy.FromURL(url, httpsDialer{})
-	} else {
-		return proxy.FromURL(url, proxy.Direct)
-	}
-}
-
-func init() {
-	proxy.RegisterDialerType("http", newProxyDialer)
-	proxy.RegisterDialerType("https", newProxyDialer)
-}
-
-func dial(targetUrl string) (string, error) {
-	log.V(2).Info("dialing...", "targetUrl", targetUrl)
-	if dialer, err := getDialer(); err != nil {
-		return "", err
-	} else if url, err := url.Parse(targetUrl); err != nil {
-		return "", err
-	} else {
-		port := url.Port()
-
-		if port == "" {
-			port = "443"
-		}
-
-		if conn, err := dialer.Dial("tcp", fmt.Sprintf("%s:%s", url.Hostname(), port)); err != nil {
-			return "", err
-		} else {
-			defer conn.Close()
-			addr := conn.LocalAddr().(*net.TCPAddr)
-			return addr.IP.String(), nil
-		}
 	}
 }
 
@@ -260,115 +145,6 @@ func newAzureClient() (client.AzureClient, error) {
 		ManagedIdentity: config.AzUseManagedIdentity.Value().(bool),
 	}
 	return client.NewClient(config)
-}
-
-func newSigningHttpClient(signature, tokenId, token, proxyUrl string) (*http.Client, error) {
-	if client, err := rest.NewHTTPClient(proxyUrl); err != nil {
-		return nil, err
-	} else {
-		client.Transport = signingTransport{
-			base:      client.Transport,
-			tokenId:   tokenId,
-			token:     token,
-			signature: signature,
-		}
-		return client, nil
-	}
-}
-
-type rewindableByteReader struct {
-	data *bytes.Reader
-}
-
-func (s *rewindableByteReader) Read(p []byte) (int, error) {
-	return s.data.Read(p)
-}
-
-func (s *rewindableByteReader) Close() error {
-	return nil
-}
-
-func (s *rewindableByteReader) Rewind() (int64, error) {
-	return s.data.Seek(0, io.SeekStart)
-}
-
-func discard(reader io.Reader) {
-	io.Copy(io.Discard, reader)
-}
-
-type signingTransport struct {
-	base      http.RoundTripper
-	tokenId   string
-	token     string
-	signature string
-}
-
-func (s signingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// The http client may try to call RoundTrip more than once to replay the same request; in which case rewind the request
-	if rbr, ok := req.Body.(*rewindableByteReader); ok {
-		if _, err := rbr.Rewind(); err != nil {
-			return nil, err
-		}
-	}
-
-	if req.Header.Get("Signature") == "" {
-
-		// token
-		digester := hmac.New(sha256.New, []byte(s.token))
-
-		// path
-		if _, err := digester.Write([]byte(req.Method + req.URL.Path)); err != nil {
-			return nil, err
-		}
-
-		// datetime
-		datetime := time.Now().Format(time.RFC3339)
-		digester = hmac.New(sha256.New, digester.Sum(nil))
-		// hash the substring of the current datetime excluding minutes, seconds, microseconds and timezone
-		if _, err := digester.Write([]byte(datetime[:13])); err != nil {
-			return nil, err
-		}
-
-		// body
-		digester = hmac.New(sha256.New, digester.Sum(nil))
-		if req.Body != nil {
-			var (
-				body    = &bytes.Buffer{}
-				hashBuf = make([]byte, 64*1024) // 64KB buffer, consider benchmarking and optimizing this value
-				tee     = io.TeeReader(req.Body, body)
-			)
-
-			defer req.Body.Close()
-			defer discard(tee)
-			defer discard(body)
-
-			for {
-				numRead, err := tee.Read(hashBuf)
-				if numRead > 0 {
-					if _, err := digester.Write(hashBuf[:numRead]); err != nil {
-						return nil, err
-					}
-				}
-
-				// exit loop on EOF or error
-				if err != nil {
-					if err != io.EOF {
-						return nil, err
-					}
-					break
-				}
-			}
-
-			req.Body = &rewindableByteReader{data: bytes.NewReader(body.Bytes())}
-		}
-
-		signature := digester.Sum(nil)
-
-		req.Header.Set("Authorization", fmt.Sprintf("%s %s", s.signature, s.tokenId))
-		req.Header.Set("RequestDate", datetime)
-		req.Header.Set("Signature", base64.StdEncoding.EncodeToString(signature))
-	}
-	return s.base.RoundTrip(req)
 }
 
 func contains[T comparable](collection []T, value T) bool {
