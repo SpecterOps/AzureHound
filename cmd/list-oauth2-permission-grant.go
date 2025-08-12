@@ -33,17 +33,17 @@ import (
 )
 
 func init() {
-	listRootCmd.AddCommand(listOauth2PermissionGrantCmd)
+	listRootCmd.AddCommand(listOAuth2PermissionGrantCmd)
 }
 
-var listOauth2PermissionGrantCmd = &cobra.Command{
+var listOAuth2PermissionGrantCmd = &cobra.Command{
 	Use:          "oauth2-permission-grants",
 	Long:         "Lists OAuth2 Permission Grants",
-	Run:          listOauth2PermissionGrantsCmdImpl,
+	Run:          listOAuth2PermissionGrantsCmdImpl,
 	SilenceUsage: true,
 }
 
-func listOauth2PermissionGrantsCmdImpl(cmd *cobra.Command, args []string) {
+func listOAuth2PermissionGrantsCmdImpl(cmd *cobra.Command, args []string) {
 	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, os.Kill)
 	defer gracefulShutdown(stop)
 
@@ -51,21 +51,21 @@ func listOauth2PermissionGrantsCmdImpl(cmd *cobra.Command, args []string) {
 	azClient := connectAndCreateClient()
 	log.Info("collecting azure active directory oauth2 permission grants...")
 	start := time.Now()
-	stream := listOauth2PermissionGrants(ctx, azClient)
+	stream := listOAuth2PermissionGrants(ctx, azClient)
 	panicrecovery.HandleBubbledPanic(ctx, stop, log)
 	outputStream(ctx, stream)
 	duration := time.Since(start)
 	log.Info("collection completed", "duration", duration.String())
 }
 
-func listOauth2PermissionGrants(ctx context.Context, client client.AzureClient) <-chan azureWrapper[models.OAuth2PermissionGrant] {
+func listOAuth2PermissionGrants(ctx context.Context, client client.AzureClient) <-chan azureWrapper[models.OAuth2PermissionGrant] {
 	out := make(chan azureWrapper[models.OAuth2PermissionGrant])
 
 	go func() {
 		defer panicrecovery.PanicRecovery()
 		defer close(out)
 		count := 0
-		for item := range client.ListAzureOauth2PermissionGrants(ctx, query.GraphParams{}) {
+		for item := range client.ListAzureOAuth2PermissionGrants(ctx, query.GraphParams{}) {
 			if item.Error != nil {
 				log.Error(item.Error, "unable to continue processing oauth2 permission grants")
 				return
@@ -73,7 +73,7 @@ func listOauth2PermissionGrants(ctx context.Context, client client.AzureClient) 
 				log.V(2).Info("found oauth2 permission grant", "app", item)
 				count++
 				if ok := pipeline.Send(ctx.Done(), out, NewAzureWrapper(
-					enums.KindAZOauth2PermissionGrant,
+					enums.KindAZOAuth2PermissionGrant,
 					models.OAuth2PermissionGrant{
 						OAuth2PermissionGrant: item.Ok,
 						TenantId:    client.TenantInfo().TenantId,
