@@ -29,8 +29,6 @@ type OAuth2PermissionGrant struct {
 	// Type of the Consent. Possible values are: "AllPrincipals", "Principal", "Application".
 	ConsentType string `json:"consentType,omitempty"`
 
-	// Id of the OAuth2PermissionGrant.
-	Id string `json:"id,omitempty"`
 
 	// PrincipalId of the user or service principal that the permission grant is for. (null if consentType is "AllPrincipals")
 	PrincipalId string `json:"principalId,omitempty"`
