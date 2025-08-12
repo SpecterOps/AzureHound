@@ -27,7 +27,7 @@ import (
 )
 
 // List Azure OAuth2 Permission Grant https://learn.microsoft.com/en-us/graph/api/resources/oauth2permissiongrant?view=graph-rest-1.0
-func (s *azureClient) ListAzureOauth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.OAuth2PermissionGrant] {
+func (s *azureClient) ListAzureOAuth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.OAuth2PermissionGrant] {
 	var (
 		out  = make(chan AzureResult[azure.OAuth2PermissionGrant])
 		path = fmt.Sprintf("/%s/oauth2PermissionGrants", constants.GraphApiVersion)

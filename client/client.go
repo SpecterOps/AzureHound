@@ -190,7 +190,7 @@ type AzureGraphClient interface {
 	ListAzureDeviceRegisteredOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
 	ListAzureDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Device]
 	ListAzureADAppRoleAssignments(ctx context.Context, servicePrincipalId string, params query.GraphParams) <-chan AzureResult[azure.AppRoleAssignment]
-	ListAzureOauth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.OAuth2PermissionGrant]
+	ListAzureOAuth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.OAuth2PermissionGrant]
 }
 
 type AzureResourceManagerClient interface {
