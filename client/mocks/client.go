@@ -548,11 +548,11 @@ func (mr *MockAzureClientMockRecorder) TenantInfo() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TenantInfo", reflect.TypeOf((*MockAzureClient)(nil).TenantInfo))
 }
 
-// ListAzureADApps mocks base method.
-func (m *MockAzureClient) ListAzureOauth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan client.AzureResult[azure.Oauth2PermissionGrant] {
+// ListAzureOauth2PermissionGrants mocks base method.
+func (m *MockAzureClient) ListAzureOauth2PermissionGrants(ctx context.Context, params query.GraphParams) <-chan client.AzureResult[azure.OAuth2PermissionGrant] {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAzureOauth2PermissionGrants", ctx, params)
-	ret0, _ := ret[0].(<-chan client.AzureResult[azure.Oauth2PermissionGrant])
+	ret0, _ := ret[0].(<-chan client.AzureResult[azure.OAuth2PermissionGrant])
 	return ret0
 }
 
