@@ -87,7 +87,7 @@ func ParseBody(accessToken string) (map[string]interface{}, error) {
 
 	if len(parts) != 3 {
 		return body, fmt.Errorf("invalid access token")
-	} else if bytes, err := base64.RawStdEncoding.DecodeString(parts[1]); err != nil {
+	} else if bytes, err := base64.RawURLEncoding.DecodeString(parts[1]); err != nil {
 		return body, err
 	} else if err := json.Unmarshal(bytes, &body); err != nil {
 		return body, err
