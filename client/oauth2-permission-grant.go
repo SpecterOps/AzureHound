@@ -33,9 +33,9 @@ func (s *azureClient) ListAzureOauth2PermissionGrants(ctx context.Context, param
 		path = fmt.Sprintf("/%s/oauth2PermissionGrants", constants.GraphApiVersion)
 	)
 
-	if params.Top == 0 {
-		params.Top = 99
-	}
+    if params.Top == 0 {
+        params.Top = 999
+    }
 
 	go getAzureObjectList[azure.OAuth2PermissionGrant](s.msgraph, ctx, path, params, out)
 
