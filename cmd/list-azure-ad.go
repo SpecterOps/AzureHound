@@ -117,6 +117,10 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 	// Enumerate Role Management Policy Assignments
 	unifiedRoleManagementPolicyAssignments := listRoleAssignmentPolicies(ctx, client)
 
+	// Enumerate OAuth2PermissionGrants
+	oAuth2PermissionGrantsChans := pipeline.TeeFixed(ctx.Done(), listOAuth2PermissionGrants(ctx, client), 1)
+	oAuth2PermissionGrants := pipeline.ToAny(ctx.Done(), oAuth2PermissionGrantsChans[0])
+
 	return pipeline.Mux(ctx.Done(),
 		appOwners,
 		appRoleAssignments,
@@ -134,5 +138,6 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 		users,
 		unifiedRoleEligibilitySchedules,
 		unifiedRoleManagementPolicyAssignments,
+		oAuth2PermissionGrants,
 	)
 }
