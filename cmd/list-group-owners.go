@@ -78,7 +78,7 @@ func listGroupOwners(ctx context.Context, client client.AzureClient, groups <-ch
 				log.Error(fmt.Errorf("failed type assertion"), "unable to continue enumerating group owners", "result", result)
 				return
 			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, group.Id); !ok {
+				if ok := pipeline.Send(ctx.Done(), ids, group.ID); !ok {
 					return
 				}
 			}
