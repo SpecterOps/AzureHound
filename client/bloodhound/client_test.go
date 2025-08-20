@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -83,10 +84,13 @@ func TestBHEClient_Ingest(t *testing.T) {
 	t.Run("retry after failures", func(t *testing.T) {
 		requestCount := 0
 		maxRetries := 1
+		wg := sync.WaitGroup{}
+		wg.Add(2)
 
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestCount++
 			w.WriteHeader(http.StatusGatewayTimeout)
+			wg.Done()
 		}))
 
 		testUrl, _ := url.Parse(testServer.URL)
@@ -103,6 +107,7 @@ func TestBHEClient_Ingest(t *testing.T) {
 
 		hadErrors := client.Ingest(context.Background(), data)
 
+		wg.Wait()
 		require.True(t, hadErrors)
 		require.Equal(t, maxRetries+1, requestCount)
 	})
