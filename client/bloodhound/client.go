@@ -419,9 +419,10 @@ func (s *BHEClient) resetConnection() error {
 func (s *BHEClient) incrementRequest() error {
 	s.mu.Lock()
 	s.currentRequestCount += 1
+	needsReset := s.currentRequestCount >= s.requestLimit
 	s.mu.Unlock()
 
-	if s.currentRequestCount >= s.requestLimit {
+	if needsReset {
 		if err := s.resetConnection(); err != nil {
 			s.log.Error(err, "error resetting BHE http client connection")
 			return err
