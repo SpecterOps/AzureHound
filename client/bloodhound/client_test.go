@@ -44,6 +44,7 @@ func TestBHEClient_SendRequest(t *testing.T) {
 			requestCount++
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
+		defer testServer.Close()
 
 		testUrl, _ := url.Parse(testServer.URL)
 
@@ -66,6 +67,7 @@ func TestBHEClient_Ingest(t *testing.T) {
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusAccepted)
 		}))
+		defer testServer.Close()
 
 		testUrl, _ := url.Parse(testServer.URL)
 
@@ -85,13 +87,14 @@ func TestBHEClient_Ingest(t *testing.T) {
 		requestCount := 0
 		maxRetries := 1
 		wg := sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(maxRetries + 1)
 
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer wg.Done()
 			requestCount++
 			w.WriteHeader(http.StatusGatewayTimeout)
-			wg.Done()
 		}))
+		defer testServer.Close()
 
 		testUrl, _ := url.Parse(testServer.URL)
 
