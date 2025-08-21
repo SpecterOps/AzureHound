@@ -82,4 +82,5 @@ const (
 	KindAZVMScaleSetRoleAssignment        Kind = "AZVMScaleSetRoleAssignment"
 	KindAZRoleEligibilityScheduleInstance Kind = "AZRoleEligibilityScheduleInstance"
 	KindAZRoleManagementPolicyAssignment  Kind = "AZRoleManagementPolicyAssignment"
+	KindAZOAuth2PermissionGrant           Kind = "AZOAuth2PermissionGrant"
 )
