@@ -20,10 +20,11 @@ package enums
 type AuthMethod = string
 
 const (
-	Certificate      string = "Certificate"
-	Secret           string = "Client Secret"
-	UsernamePassword string = "Username and Password"
-	ManagedIdentity  string = "Azure Managed Identity"
+	Certificate        string = "Certificate"
+	Secret             string = "Client Secret"
+	UsernamePassword   string = "Username and Password"
+	ManagedIdentity    string = "Azure Managed Identity"
+	ManagedIdentitySDK string = "Azure Managed Identity SDK"
 )
 
 func AuthMethods() []AuthMethod {
@@ -32,5 +33,6 @@ func AuthMethods() []AuthMethod {
 		Secret,
 		UsernamePassword,
 		ManagedIdentity,
+		ManagedIdentitySDK,
 	}
 }

@@ -244,6 +244,21 @@ var (
 		Default:    bool(false),
 	}
 
+	AzUseManagedIdentitySDK = Config{
+		Name:       "managed-identity-sdk",
+		Shorthand:  "",
+		Usage:      "If true then authentication is done via managed identity sdk (default false).",
+		Persistent: true,
+		Default:    bool(false),
+	}
+
+	AzManagedIdentityClientId = Config{
+		Name:       "managed-identity-client-id",
+		Shorthand:  "",
+		Usage:      "Client ID used to authenticate via Managed Identity SDK",
+		Persistent: true,
+		Default:    "",
+	}
 	// BHE Configurations
 	BHEUrl = Config{
 		Name:       "instance",
@@ -370,6 +385,8 @@ var (
 		AzSubId,
 		AzMgmtGroupId,
 		AzUseManagedIdentity,
+		AzUseManagedIdentitySDK,
+		AzManagedIdentityClientId,
 	}
 
 	BloodHoundEnterpriseConfig = []Config{

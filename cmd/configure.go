@@ -116,6 +116,13 @@ func configure() error {
 			}
 		} else if authMethod == enums.ManagedIdentity {
 			config.AzUseManagedIdentity.Set(true)
+		} else if authMethod == enums.ManagedIdentitySDK {
+			config.AzUseManagedIdentitySDK.Set(true)
+			if umiClient, err := prompt("Input the User-Assigned Managed Identity", validateGuid, true); err != nil {
+				return err
+			} else {
+				config.AzManagedIdentityClientId.Set(umiClient)
+			}
 		} else if secret, err := prompt("Client Secret", nil, true); err != nil {
 			return err
 		} else {

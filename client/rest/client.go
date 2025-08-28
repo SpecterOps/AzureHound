@@ -73,12 +73,12 @@ func NewRestClient(apiUrl string, config config.Config) (RestClient, error) {
 }
 
 type restClient struct {
-	api            url.URL
-	http           *http.Client
-	tenant         string
-	token          Token
-	subId          []string
-	mgmtGroupId    []string
+	api           url.URL
+	http          *http.Client
+	tenant        string
+	token         Token
+	subId         []string
+	mgmtGroupId   []string
 	Authenticator *Authenticator
 }
 

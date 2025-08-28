@@ -21,10 +21,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/bloodhoundad/azurehound/v2/client/config"
 	"github.com/bloodhoundad/azurehound/v2/constants"
 )
@@ -50,6 +55,13 @@ type ManagedIdentityAuthStrategy struct {
 	api     url.URL
 	tenant  string
 	token   Token
+}
+
+// ManagedIdentitySDKAuthStrategy is an authentication strategy that uses Azure Managed Identity SDK
+type ManagedIdentitySDKAuthStrategy struct {
+	credential *azidentity.ManagedIdentityCredential
+	resource   url.URL
+	token      azcore.AccessToken
 }
 
 // GenericAuthStrategy is an authentication strategy that uses a bunch of pre-existing authentication methods (TODO: Break this up)
@@ -78,6 +90,32 @@ func NewManagedIdentityAuthenticator(config config.Config, auth *url.URL, api *u
 			authUrl: *auth,
 			api:     *api,
 			tenant:  config.Tenant,
+		},
+		mutex: sync.RWMutex{},
+	}
+}
+
+// NewManagedIdentitySDKAuthenticator creates a new Authenticator using the ManagedIdentitySDKAuthStrategy
+func NewManagedIdentitySDKAuthenticator(config config.Config, resource *url.URL) *Authenticator {
+
+	options := &azidentity.ManagedIdentityCredentialOptions{
+		ID: azidentity.ClientID(config.ManagedIdentityClientId),
+	}
+
+	cred, err := azidentity.NewManagedIdentityCredential(options)
+	if err != nil {
+		log.Fatalf("Failed to authenticate with User-Assigned Managed Identity")
+		optionsFallback := &azidentity.ManagedIdentityCredentialOptions{}
+		cred, err = azidentity.NewManagedIdentityCredential(optionsFallback)
+		if err != nil {
+			log.Fatalf("Failed to authenticate with system-assigned Managed Identity: %v", err)
+			return nil
+		}
+	}
+	return &Authenticator{
+		auth: &ManagedIdentitySDKAuthStrategy{
+			credential: cred,
+			resource:   *resource,
 		},
 		mutex: sync.RWMutex{},
 	}
@@ -123,9 +161,14 @@ func (s *Authenticator) refreshIfExpired(r *restClient) error {
 		return nil
 	}
 	// Authenticate
-	if authRequest, err := s.auth.createAuthRequest(); err != nil {
+	authRequest, err := s.auth.createAuthRequest()
+	if err != nil {
 		return err
-	} else if authResponse, err := r.send(authRequest); err != nil {
+	}
+	if authRequest == nil {
+		return nil
+	}
+	if authResponse, err := r.send(authRequest); err != nil {
 		return err
 	} else {
 		defer authResponse.Body.Close()
@@ -248,4 +291,43 @@ func (s *GenericAuthStrategy) addAuthenticationToRequest(req *http.Request) (*ht
 		req.Header.Set("Authorization", s.token.String())
 	}
 	return req, nil
+}
+
+// Adds the access token to the outgoing HTTP request
+func (s *ManagedIdentitySDKAuthStrategy) addAuthenticationToRequest(req *http.Request) (*http.Request, error) {
+	token := s.token
+
+	if token.Token == "" || token.ExpiresOn.Before(time.Now().Add(2*time.Minute)) {
+		if err := s.refreshToken(req.Context()); err != nil {
+			return nil, err
+		}
+		token = s.token
+	}
+	req.Header.Set("Authorization", "Bearer "+token.Token)
+	return req, nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) refreshToken(ctx context.Context) error {
+	token, err := s.credential.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{s.resource.String() + "/.default"},
+	})
+	if err != nil {
+		return err
+	}
+	s.token = token
+	return nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) createAuthRequest() (*http.Request, error) {
+	// Not used in SDK-based flow, return nil
+	return nil, nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) decodeAuthResponse(resp *http.Response) error {
+	// Not used in SDK-based flow, do nothing
+	return nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) isExpired() bool {
+	return s.token.Token == "" || s.token.ExpiresOn.Before(time.Now().Add(2*time.Minute))
 }
