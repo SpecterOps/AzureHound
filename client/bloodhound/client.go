@@ -79,6 +79,8 @@ func NewBHEClient(bheUrl url.URL, tokenId, token, proxy string, maxReqPerConn, m
 		proxy:               proxy,
 		retryDelay:          5,
 		log:                 logger,
+		token:               token,
+		tokenId:             tokenId,
 	}, nil
 }
 
@@ -401,6 +403,8 @@ func (s *BHEClient) resetConnection() error {
 		signature: BHEAuthSignature,
 	}
 
+	s.log.V(1).Info("Max requests per connection limit reached, resetting connection with BHE server")
+
 	s.httpClient.CloseIdleConnections()
 
 	s.mu.Lock()
@@ -415,9 +419,10 @@ func (s *BHEClient) resetConnection() error {
 func (s *BHEClient) incrementRequest() error {
 	s.mu.Lock()
 	s.currentRequestCount += 1
+	needsReset := s.currentRequestCount >= s.requestLimit
 	s.mu.Unlock()
 
-	if s.currentRequestCount >= s.requestLimit {
+	if needsReset {
 		if err := s.resetConnection(); err != nil {
 			s.log.Error(err, "error resetting BHE http client connection")
 			return err
