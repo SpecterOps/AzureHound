@@ -69,7 +69,7 @@ func listKeyVaultAccessPoliciesCmdImpl(cmd *cobra.Command, args []string) {
 	panicrecovery.HandleBubbledPanic(ctx, stop, log)
 }
 
-func listKeyVaultAccessPolicies(ctx context.Context, client client.AzureClient, keyVaults <-chan interface{}, filters []enums.KeyVaultAccessType) <-chan interface{} {
+func listKeyVaultAccessPolicies(ctx context.Context, _ client.AzureClient, keyVaults <-chan interface{}, filters []enums.KeyVaultAccessType) <-chan interface{} {
 	out := make(chan interface{})
 
 	go func() {

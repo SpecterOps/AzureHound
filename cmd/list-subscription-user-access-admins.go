@@ -62,7 +62,7 @@ func listSubscriptionUserAccessAdminsCmdImpl(cmd *cobra.Command, args []string) 
 	log.Info("collection completed", "duration", duration.String())
 }
 
-func listSubscriptionUserAccessAdmins(ctx context.Context, client client.AzureClient, vmRoleAssignments <-chan interface{}) <-chan interface{} {
+func listSubscriptionUserAccessAdmins(ctx context.Context, _ client.AzureClient, vmRoleAssignments <-chan interface{}) <-chan interface{} {
 	out := make(chan interface{})
 
 	go func() {

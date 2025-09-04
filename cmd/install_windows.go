@@ -155,3 +155,16 @@ func createService(wsm *mgr.Mgr, name string, exe string, config mgr.Config, rec
 		return nil
 	}
 }
+
+func getExePath() (string, error) {
+	exe := os.Args[0]
+	if exePath, err := filepath.Abs(exe); err != nil {
+		return "", err
+	} else if path, info, err := stat(exePath); err != nil {
+		return "", err
+	} else if info.IsDir() {
+		return "", fmt.Errorf("%s is a directory", path)
+	} else {
+		return path, nil
+	}
+}
