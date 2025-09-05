@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -50,6 +51,7 @@ func installCmdImpl(cmd *cobra.Command, args []string) {
 			DisplayName:      constants.DisplayName,
 			Description:      constants.Description,
 			StartType:        mgr.StartAutomatic,
+			ServiceStartName: constants.ServiceStartName,
 			DelayedAutoStart: true,
 		}
 		recoveryActions = []mgr.RecoveryAction{
@@ -125,10 +127,39 @@ func installService(name string, config mgr.Config, recoveryActions []mgr.Recove
 
 		if err := createService(wsm, name, exe, config, recoveryActions, args...); err != nil {
 			return err
+		} else if err := setACLs(); err != nil {
+			return err
 		} else {
 			return nil
 		}
 	}
+}
+
+func setACLs() error {
+	var (
+		dataDir = config.SystemConfigDirs()[0]
+	)
+
+	if err := runICACLS([]string{dataDir, "/grant", "NT Authority\\SYSTEM:(OI)(CI)F", "/q"}); err != nil {
+		return err
+	} else if err := runICACLS([]string{dataDir, "/grant", "Builtin\\Administrators:(OI)(CI)F", "/q"}); err != nil {
+		return err
+	} else if err := runICACLS([]string{dataDir, "/grant", "NT Service\\" + constants.DisplayName + ":(OI)(CI)RX", "/q"}); err != nil {
+		return err
+	} else if err := runICACLS([]string{dataDir, "/inheritance:r"}); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func runICACLS(args []string) error {
+	cmd := exec.Command("icacls.exe", args...)
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func createService(wsm *mgr.Mgr, name string, exe string, config mgr.Config, recoveryActions []mgr.RecoveryAction, args ...string) error {
