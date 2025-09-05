@@ -27,6 +27,7 @@ var Version string = "v0.0.0"
 const (
 	Name                 string = "azurehound"
 	DisplayName          string = "AzureHound"
+	ServiceStartName     string = "NT Service\\AzureHound"
 	Description          string = "The official tool for collecting Azure data for BloodHound and BloodHound Enterprise"
 	AuthorRef            string = "Created by the BloodHound Enterprise team - https://bloodhoundenterprise.io"
 	AzPowerShellClientID string = "1950a258-227b-4e31-a9cf-717495945fc2"

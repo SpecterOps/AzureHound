@@ -23,21 +23,19 @@ import (
 	"io/fs"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime/pprof"
-
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/spf13/cobra"
-	"golang.org/x/net/proxy"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
 	client_config "github.com/bloodhoundad/azurehound/v2/client/config"
+	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/config"
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/logger"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 	"github.com/bloodhoundad/azurehound/v2/sinks"
+	"github.com/spf13/cobra"
+	"golang.org/x/net/proxy"
 )
 
 func init() {
@@ -175,19 +173,6 @@ func stat(path string) (string, fs.FileInfo, error) {
 		p := path + ".exe"
 		info, err := os.Stat(p)
 		return p, info, err
-	}
-}
-
-func getExePath() (string, error) {
-	exe := os.Args[0]
-	if exePath, err := filepath.Abs(exe); err != nil {
-		return "", err
-	} else if path, info, err := stat(exePath); err != nil {
-		return "", err
-	} else if info.IsDir() {
-		return "", fmt.Errorf("%s is a directory", path)
-	} else {
-		return path, nil
 	}
 }
 

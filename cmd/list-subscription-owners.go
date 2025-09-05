@@ -62,7 +62,7 @@ func listSubscriptionOwnersCmdImpl(cmd *cobra.Command, args []string) {
 	log.Info("collection completed", "duration", duration.String())
 }
 
-func listSubscriptionOwners(ctx context.Context, client client.AzureClient, roleAssignments <-chan interface{}) <-chan interface{} {
+func listSubscriptionOwners(ctx context.Context, _ client.AzureClient, roleAssignments <-chan interface{}) <-chan interface{} {
 	out := make(chan interface{})
 
 	go func() {
