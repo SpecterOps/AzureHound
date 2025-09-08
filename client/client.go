@@ -25,14 +25,40 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/client/config"
 	"github.com/bloodhoundad/azurehound/v2/client/query"
 	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/bloodhoundad/azurehound/v2/models/intune"
 	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 )
+
+// SignInEvent represents a sign-in event from Microsoft Graph
+type SignInEvent struct {
+	ID                string    `json:"id"`
+	CreatedDateTime   time.Time `json:"createdDateTime"`
+	UserDisplayName   string    `json:"userDisplayName"`
+	UserPrincipalName string    `json:"userPrincipalName"`
+	UserId            string    `json:"userId"`
+	AppDisplayName    string    `json:"appDisplayName"`
+	ClientAppUsed     string    `json:"clientAppUsed"`
+	IPAddress         string    `json:"ipAddress"`
+	IsInteractive     bool      `json:"isInteractive"`
+	Status            struct {
+		ErrorCode int `json:"errorCode"`
+	} `json:"status"`
+	DeviceDetail struct {
+		DeviceId        string `json:"deviceId"`
+		DisplayName     string `json:"displayName"`
+		OperatingSystem string `json:"operatingSystem"`
+		IsCompliant     bool   `json:"isCompliant"`
+	} `json:"deviceDetail"`
+	RiskState           string `json:"riskState"`
+	RiskLevelAggregated string `json:"riskLevelAggregated"`
+}
 
 func NewClient(config config.Config) (AzureClient, error) {
 	if msgraph, err := rest.NewRestClient(config.GraphUrl(), config); err != nil {
@@ -175,7 +201,35 @@ type azureClient struct {
 }
 
 type AzureGraphClient interface {
+
+	// Add these method signatures to the AzureGraphClient interface in client/client.go
+
+	// User Role Assignment Methods
+	ListUserAppRoleAssignments(ctx context.Context, userID string, params query.GraphParams) <-chan AzureResult[azure.AppRoleAssignment]
+
+	// Sign-in Activity Methods
+	ListSignIns(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.SignIn]
+
+	// Device Registration Methods
+	GetDeviceRegisteredUsers(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+	GetDeviceRegisteredOwners(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+
+	// High-level Collection Methods
+	CollectGroupMembershipData(ctx context.Context) <-chan AzureResult[azure.GroupMembershipData]
+	CollectUserRoleAssignments(ctx context.Context) <-chan AzureResult[azure.UserRoleData]
+	CollectDeviceAccessData(ctx context.Context) <-chan AzureResult[azure.DeviceAccessData]
+
+	ValidateScriptDeployment(ctx context.Context) error
 	GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error)
+
+	ListIntuneDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.IntuneDevice]
+	ExecuteRegistryCollectionScript(ctx context.Context, deviceID string) (*azure.ScriptExecution, error)
+	GetScriptExecutionResults(ctx context.Context, scriptID string) <-chan AzureResult[azure.ScriptExecutionResult]
+	WaitForScriptCompletion(ctx context.Context, scriptID string, maxWaitTime time.Duration) (*azure.RegistryData, error)
+	CollectRegistryDataFromDevice(ctx context.Context, deviceID string) (*azure.RegistryData, error)
+	CollectRegistryDataFromAllDevices(ctx context.Context) <-chan AzureResult[azure.DeviceRegistryData]
+	GetDeployedScriptID(ctx context.Context, scriptName string) (string, error)
+	TriggerScriptExecution(ctx context.Context, scriptID, deviceID string) error
 
 	ListAzureADGroups(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Group]
 	ListAzureADGroupMembers(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
@@ -221,6 +275,15 @@ type AzureClient interface {
 
 	TenantInfo() azure.Tenant
 	CloseIdleConnections()
+
+	CollectSessionDataDirectly(ctx context.Context) <-chan AzureResult[azure.DeviceSessionData]
+	GetUserSignInActivity(ctx context.Context, userPrincipalName string, days int) ([]SignInEvent, error)
+	GetDeviceSignInActivity(ctx context.Context, deviceId string, days int) ([]SignInEvent, error)
+
+	// Add Intune methods
+	ListIntuneManagedDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[intune.ManagedDevice]
+	GetIntuneDeviceCompliance(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ComplianceState]
+	GetIntuneDeviceConfiguration(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ConfigurationState]
 }
 
 func (s azureClient) TenantInfo() azure.Tenant {
