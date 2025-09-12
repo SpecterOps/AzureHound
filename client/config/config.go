@@ -35,7 +35,6 @@ type Config struct {
 	Management              string   // The Azure ResourceManager URL
 	MgmtGroupId             []string // The Management Group Id to use as a filter
 	ManagedIdentity         bool     // If true then the client will use a managed identity to authenticate to Azure APIs
-	ManagedIdentitySDK      bool     // If true then the client will use a managed identity sdk to authenticate to Azure APIs
 	ManagedIdentityClientId string   // Client ID of user-assigned managed idenity used to authenticate via managed identity SDK
 	Password                string   // The password associated with the user principal name associated with the Azure portal.
 	ProxyUrl                string   // The forward proxy url

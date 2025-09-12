@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"sync"
@@ -62,6 +61,7 @@ type ManagedIdentitySDKAuthStrategy struct {
 	credential *azidentity.ManagedIdentityCredential
 	resource   url.URL
 	token      azcore.AccessToken
+	mutex      sync.Mutex
 }
 
 // GenericAuthStrategy is an authentication strategy that uses a bunch of pre-existing authentication methods (TODO: Break this up)
@@ -95,23 +95,23 @@ func NewManagedIdentityAuthenticator(config config.Config, auth *url.URL, api *u
 	}
 }
 
-// NewManagedIdentitySDKAuthenticator creates a new Authenticator using the ManagedIdentitySDKAuthStrategy
-func NewManagedIdentitySDKAuthenticator(config config.Config, resource *url.URL) *Authenticator {
-
+func GetManagedIdentityCredential(config config.Config) (*azidentity.ManagedIdentityCredential, error) {
 	options := &azidentity.ManagedIdentityCredentialOptions{
 		ID: azidentity.ClientID(config.ManagedIdentityClientId),
 	}
-
 	cred, err := azidentity.NewManagedIdentityCredential(options)
 	if err != nil {
-		log.Fatalf("Failed to authenticate with User-Assigned Managed Identity")
 		optionsFallback := &azidentity.ManagedIdentityCredentialOptions{}
 		cred, err = azidentity.NewManagedIdentityCredential(optionsFallback)
 		if err != nil {
-			log.Fatalf("Failed to authenticate with system-assigned Managed Identity: %v", err)
-			return nil
+			return nil, fmt.Errorf("failed to authenticate with managed identity: %w", err)
 		}
 	}
+	return cred, nil
+}
+
+// NewManagedIdentitySDKAuthenticator creates a new Authenticator using the ManagedIdentitySDKAuthStrategy
+func NewManagedIdentitySDKAuthenticator(config config.Config, resource *url.URL, cred *azidentity.ManagedIdentityCredential) *Authenticator {
 	return &Authenticator{
 		auth: &ManagedIdentitySDKAuthStrategy{
 			credential: cred,
@@ -296,7 +296,8 @@ func (s *GenericAuthStrategy) addAuthenticationToRequest(req *http.Request) (*ht
 // Adds the access token to the outgoing HTTP request
 func (s *ManagedIdentitySDKAuthStrategy) addAuthenticationToRequest(req *http.Request) (*http.Request, error) {
 	token := s.token
-
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if token.Token == "" || token.ExpiresOn.Before(time.Now().Add(2*time.Minute)) {
 		if err := s.refreshToken(req.Context()); err != nil {
 			return nil, err

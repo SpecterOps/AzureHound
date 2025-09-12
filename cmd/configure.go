@@ -56,6 +56,11 @@ var configureCmd = &cobra.Command{
 	SilenceUsage: true,
 }
 
+var ManagedIdentityTypes = []string{
+	"System-Assigned",
+	"User-Assigned",
+}
+
 func configureCmdImpl(cmd *cobra.Command, args []string) {
 	if err := configure(); err != nil {
 		exit(fmt.Errorf("failed to configure cobra CLI: %w", err))
@@ -116,12 +121,18 @@ func configure() error {
 			}
 		} else if authMethod == enums.ManagedIdentity {
 			config.AzUseManagedIdentity.Set(true)
-		} else if authMethod == enums.ManagedIdentitySDK {
-			config.AzUseManagedIdentitySDK.Set(true)
-			if umiClient, err := prompt("Input the User-Assigned Managed Identity", validateGuid, true); err != nil {
+			if _, identityType, err := choose("Managed Identity Type", ManagedIdentityTypes, 0); err != nil {
 				return err
+			} else if identityType == "User-Assigned" {
+				// User-Assigned: Prompt for Client ID
+				if umiClient, err := prompt("Input the User-Assigned Managed Identity (Client ID)", validateGuid, true); err != nil {
+					return err
+				} else {
+					config.AzManagedIdentityClientId.Set(umiClient)
+				}
 			} else {
-				config.AzManagedIdentityClientId.Set(umiClient)
+				// System-Assigned: Set client ID to empty string
+				config.AzManagedIdentityClientId.Set("")
 			}
 		} else if secret, err := prompt("Client Secret", nil, true); err != nil {
 			return err

@@ -77,6 +77,11 @@ var AzRegions = []string{
 	constants.USGovL5,
 }
 
+var ManagedIdentityTypes = []string{
+	"System-Assigned Identity",
+	"User-Assigned Identity",
+}
+
 var (
 	// Global Configurations
 	ConfigFile = Config{
@@ -244,14 +249,6 @@ var (
 		Default:    bool(false),
 	}
 
-	AzUseManagedIdentitySDK = Config{
-		Name:       "managed-identity-sdk",
-		Shorthand:  "",
-		Usage:      "If true then authentication is done via managed identity sdk (default false).",
-		Persistent: true,
-		Default:    bool(false),
-	}
-
 	AzManagedIdentityClientId = Config{
 		Name:       "managed-identity-client-id",
 		Shorthand:  "",
@@ -385,7 +382,6 @@ var (
 		AzSubId,
 		AzMgmtGroupId,
 		AzUseManagedIdentity,
-		AzUseManagedIdentitySDK,
 		AzManagedIdentityClientId,
 	}
 

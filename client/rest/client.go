@@ -55,7 +55,12 @@ func NewRestClient(apiUrl string, config config.Config) (RestClient, error) {
 	} else {
 		var authenticator *Authenticator
 		if config.ManagedIdentity {
-			authenticator = NewManagedIdentityAuthenticator(config, auth, api, http)
+			cred, err := GetManagedIdentityCredential(config)
+			if err != nil {
+				return nil, err
+			}
+			authenticator = NewManagedIdentitySDKAuthenticator(config, api, cred)
+
 		} else {
 			authenticator = NewGenericAuthenticator(config, auth, api)
 		}

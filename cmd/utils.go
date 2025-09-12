@@ -143,7 +143,6 @@ func newAzureClient() (client.AzureClient, error) {
 		Tenant:                  config.AzTenant.Value().(string),
 		Username:                config.AzUsername.Value().(string),
 		ManagedIdentity:         config.AzUseManagedIdentity.Value().(bool),
-		ManagedIdentitySDK:      config.AzUseManagedIdentitySDK.Value().(bool),
 		ManagedIdentityClientId: config.AzManagedIdentityClientId.Value().(string),
 	}
 	return client.NewClient(config)
