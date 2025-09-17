@@ -206,32 +206,3 @@ func isServiceUserHeuristic(upn string) bool {
 	// Check for machine account suffix or GUID-like names
 	return strings.HasSuffix(lower, "$") || isGUIDLike(upn)
 }
-
-// Helper function for GUID detection
-func isGUIDLike(s string) bool {
-	// Basic GUID pattern check
-	if len(s) != 36 {
-		return false
-	}
-
-	// Check for GUID format: 8-4-4-4-12
-	parts := strings.Split(s, "-")
-	if len(parts) != 5 {
-		return false
-	}
-
-	expectedLengths := []int{8, 4, 4, 4, 12}
-	for i, part := range parts {
-		if len(part) != expectedLengths[i] {
-			return false
-		}
-		// Check if all characters are hexadecimal
-		for _, char := range part {
-			if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
-				return false
-			}
-		}
-	}
-
-	return true
-}

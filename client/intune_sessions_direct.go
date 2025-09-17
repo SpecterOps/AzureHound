@@ -4,6 +4,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ func (s *azureClient) CollectSessionDataDirectly(ctx context.Context) <-chan Azu
 	go func() {
 		defer close(out)
 
-		fmt.Printf("≡ƒöì Starting session data collection from Graph API...\n")
+		fmt.Printf("🔍 Starting session data collection from Graph API...\n")
 
 		// Get sign-in logs using the correct AzureHound pattern
 		params := query.GraphParams{
@@ -47,7 +48,7 @@ func (s *azureClient) CollectSessionDataDirectly(ctx context.Context) <-chan Azu
 		// Collect all sign-in logs
 		for result := range signInLogsChan {
 			if result.Error != nil {
-				fmt.Printf("Γ¥î Error collecting sign-in log: %v\n", result.Error)
+				fmt.Printf("❌ Error collecting sign-in log: %v\n", result.Error)
 				errorCount++
 				if errorCount > 5 { // Stop after too many errors
 					out <- AzureResult[azure.DeviceSessionData]{
@@ -60,14 +61,14 @@ func (s *azureClient) CollectSessionDataDirectly(ctx context.Context) <-chan Azu
 			signInLogs = append(signInLogs, result.Ok)
 		}
 
-		fmt.Printf("≡ƒôè Retrieved %d sign-in events (%d errors)\n", len(signInLogs), errorCount)
+		fmt.Printf("📊 Retrieved %d sign-in events (%d errors)\n", len(signInLogs), errorCount)
 
 		if len(signInLogs) == 0 {
-			fmt.Printf("ΓÜá∩╕Å  No sign-in logs found. This could mean:\n")
-			fmt.Printf("   ΓÇó No users signed in recently (last 7 days)\n")
-			fmt.Printf("   ΓÇó Missing AuditLog.Read.All permission\n")
-			fmt.Printf("   ΓÇó Azure AD Premium license required for audit logs\n")
-			fmt.Printf("   ΓÇó Sign-in logs not available in this tenant\n")
+			fmt.Printf("⚠️  No sign-in logs found. This could mean:\n")
+			fmt.Printf("   • No users signed in recently (last 7 days)\n")
+			fmt.Printf("   • Missing AuditLog.Read.All permission\n")
+			fmt.Printf("   • Azure AD Premium license required for audit logs\n")
+			fmt.Printf("   • Sign-in logs not available in this tenant\n")
 
 			out <- AzureResult[azure.DeviceSessionData]{
 				Error: fmt.Errorf("no sign-in logs found - check permissions and recent user activity"),
@@ -75,9 +76,9 @@ func (s *azureClient) CollectSessionDataDirectly(ctx context.Context) <-chan Azu
 			return
 		}
 
-		// Process the logs into device sessions - pass the context
-		deviceSessions := s.processSignInLogsSimple(ctx, signInLogs)
-		fmt.Printf("≡ƒöä Created %d device session records\n", len(deviceSessions))
+		// Process the logs into device sessions
+		deviceSessions := s.processSignInLogsSimple(signInLogs)
+		fmt.Printf("🔄 Created %d device session records\n", len(deviceSessions))
 
 		// Send results
 		for _, sessionData := range deviceSessions {
@@ -90,14 +91,11 @@ func (s *azureClient) CollectSessionDataDirectly(ctx context.Context) <-chan Azu
 
 // GetUserSignInActivity retrieves sign-in activity for a specific user
 func (s *azureClient) GetUserSignInActivity(ctx context.Context, userPrincipalName string, days int) ([]SignInEvent, error) {
-	fmt.Printf("≡ƒöì Getting sign-in activity for user: %s\n", userPrincipalName)
-
-	// Sanitize userPrincipalName to prevent OData injection
-	sanitizedUPN := strings.ReplaceAll(userPrincipalName, "'", "''")
+	fmt.Printf("🔍 Getting sign-in activity for user: %s\n", userPrincipalName)
 
 	params := query.GraphParams{
 		Filter: fmt.Sprintf("userPrincipalName eq '%s' and createdDateTime ge %s",
-			sanitizedUPN, time.Now().AddDate(0, 0, -days).Format(time.RFC3339)),
+			userPrincipalName, time.Now().AddDate(0, 0, -days).Format(time.RFC3339)),
 		Top: 50,
 	}
 
@@ -116,14 +114,11 @@ func (s *azureClient) GetUserSignInActivity(ctx context.Context, userPrincipalNa
 
 // GetDeviceSignInActivity retrieves sign-in activity for a specific device
 func (s *azureClient) GetDeviceSignInActivity(ctx context.Context, deviceId string, days int) ([]SignInEvent, error) {
-	fmt.Printf("≡ƒöì Getting sign-in activity for device: %s\n", deviceId)
-
-	// Sanitize deviceId to prevent OData injection
-	sanitizedDeviceId := strings.ReplaceAll(deviceId, "'", "''")
+	fmt.Printf("🔍 Getting sign-in activity for device: %s\n", deviceId)
 
 	params := query.GraphParams{
 		Filter: fmt.Sprintf("deviceDetail/deviceId eq '%s' and createdDateTime ge %s",
-			sanitizedDeviceId, time.Now().AddDate(0, 0, -days).Format(time.RFC3339)),
+			deviceId, time.Now().AddDate(0, 0, -days).Format(time.RFC3339)),
 		Top: 50,
 	}
 
@@ -155,8 +150,8 @@ func (s *azureClient) listSignInLogs(ctx context.Context, params query.GraphPara
 }
 
 // processSignInLogsSimple converts sign-in logs to device session data
-func (s *azureClient) processSignInLogsSimple(ctx context.Context, signInLogs []SignInEvent) []azure.DeviceSessionData {
-	fmt.Printf("≡ƒöä Processing %d sign-in logs into device sessions\n", len(signInLogs))
+func (s *azureClient) processSignInLogsSimple(signInLogs []SignInEvent) []azure.DeviceSessionData {
+	fmt.Printf("🔄 Processing %d sign-in logs into device sessions\n", len(signInLogs))
 
 	// Group sign-ins by device
 	deviceGroups := make(map[string][]SignInEvent)
@@ -173,14 +168,14 @@ func (s *azureClient) processSignInLogsSimple(ctx context.Context, signInLogs []
 		deviceGroups[deviceKey] = append(deviceGroups[deviceKey], signIn)
 	}
 
-	fmt.Printf("≡ƒôè Grouped sign-ins into %d devices\n", len(deviceGroups))
+	fmt.Printf("📊 Grouped sign-ins into %d devices\n", len(deviceGroups))
 
 	var results []azure.DeviceSessionData
 
 	for deviceKey, sessions := range deviceGroups {
-		fmt.Printf("≡ƒöä Processing device: %s (%d sessions)\n", deviceKey, len(sessions))
-		// Pass the context to createDeviceSessionData
-		sessionData := s.createDeviceSessionData(ctx, deviceKey, sessions)
+		fmt.Printf("🔄 Processing device: %s (%d sessions)\n", deviceKey, len(sessions))
+		// FIXED: Call the correct function name
+		sessionData := s.createDeviceSessionData(deviceKey, sessions)
 		results = append(results, sessionData)
 	}
 
@@ -188,7 +183,7 @@ func (s *azureClient) processSignInLogsSimple(ctx context.Context, signInLogs []
 }
 
 // createDeviceSessionData creates session data for a device (main function)
-func (s *azureClient) createDeviceSessionData(ctx context.Context, deviceKey string, signIns []SignInEvent) azure.DeviceSessionData {
+func (s *azureClient) createDeviceSessionData(deviceKey string, signIns []SignInEvent) azure.DeviceSessionData {
 	now := time.Now()
 
 	// Create basic device info
@@ -223,9 +218,9 @@ func (s *azureClient) createDeviceSessionData(ctx context.Context, deviceKey str
 	for i, signIn := range signIns {
 		// Only process successful sign-ins
 		if signIn.Status.ErrorCode == 0 {
-			// Use the passed context instead of context.Background()
-			isAdmin := s.isAdminUserEnhanced(ctx, signIn.UserPrincipalName)
-			isService := s.isServiceUserEnhanced(ctx, signIn.UserPrincipalName)
+			// FIXED: Use the correct function names with fallback approach
+			isAdmin := s.isAdminUserEnhanced(context.Background(), signIn.UserPrincipalName)
+			isService := s.isServiceUserEnhanced(context.Background(), signIn.UserPrincipalName)
 
 			if isAdmin {
 				adminCount++
@@ -313,7 +308,7 @@ func (s *azureClient) createDeviceSessionData(ctx context.Context, deviceKey str
 		},
 	}
 
-	fmt.Printf("Γ£à Created session data for %s: %d sessions, %d users, %d admin sessions, %d service accounts\n",
+	fmt.Printf("✅ Created session data for %s: %d sessions, %d users, %d admin sessions, %d service accounts\n",
 		deviceInfo.DeviceName, len(activeSessions), len(loggedOnUsers), adminCount, serviceCount)
 
 	return azure.DeviceSessionData{
@@ -370,6 +365,13 @@ func getIdleTime(logonTime time.Time) string {
 	minutes := int(duration.Minutes()) % 60
 	seconds := int(duration.Seconds()) % 60
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
+// Helper function for GUID detection
+func isGUIDLike(s string) bool {
+	guidPattern := `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`
+	matched, _ := regexp.MatchString(guidPattern, s)
+	return matched
 }
 
 func getTokenPrivileges(isAdmin bool) []string {
