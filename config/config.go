@@ -77,6 +77,11 @@ var AzRegions = []string{
 	constants.USGovL5,
 }
 
+var ManagedIdentityTypes = []string{
+	"System-Assigned Identity",
+	"User-Assigned Identity",
+}
+
 var (
 	// Global Configurations
 	ConfigFile = Config{
@@ -244,6 +249,13 @@ var (
 		Default:    bool(false),
 	}
 
+	AzManagedIdentityClientId = Config{
+		Name:       "managed-identity-client-id",
+		Shorthand:  "",
+		Usage:      "Client ID used to authenticate via Managed Identity SDK",
+		Persistent: true,
+		Default:    "",
+	}
 	// BHE Configurations
 	BHEUrl = Config{
 		Name:       "instance",
@@ -370,6 +382,7 @@ var (
 		AzSubId,
 		AzMgmtGroupId,
 		AzUseManagedIdentity,
+		AzManagedIdentityClientId,
 	}
 
 	BloodHoundEnterpriseConfig = []Config{
