@@ -88,7 +88,7 @@ func listGroupMembers(ctx context.Context, client client.AzureClient, groups <-c
 				log.Error(fmt.Errorf("failed group type assertion"), "unable to continue enumerating group members", "result", result)
 				return
 			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, group.Id); !ok {
+				if ok := pipeline.Send(ctx.Done(), ids, group.ID); !ok {
 					return
 				}
 			}

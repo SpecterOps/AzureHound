@@ -127,9 +127,9 @@ func (s Organization) ToTenant() Tenant {
 		DefaultDomain: defaultDomain,
 		DisplayName:   s.DisplayName,
 		Domains:       domains,
-		Id:            fmt.Sprintf("/tenants/%s", s.Id),
+		Id:            fmt.Sprintf("/tenants/%s", s.ID),
 		TenantType:    s.TenantType,
-		TenantId:      s.Id,
+		TenantId:      s.ID,
 	}
 }
 
