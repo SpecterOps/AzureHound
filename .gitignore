@@ -232,3 +232,7 @@ tags
 
 # Built Visual Studio Code Extensions
 *.vsix
+.github/workflows/cla.yml
+.github/workflows/vuln-scan.yml
+/.github
+get_token.ps1
