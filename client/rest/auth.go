@@ -347,5 +347,6 @@ func (s *ManagedIdentitySDKAuthStrategy) isExpired() bool {
 }
 
 func (s *ManagedIdentitySDKAuthStrategy) isJWTProvided() bool {
+	// Not used in SDK-based flow, do nothing
 	return false
 }
