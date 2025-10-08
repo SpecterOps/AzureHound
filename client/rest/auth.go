@@ -36,6 +36,7 @@ import (
 // AuthStrategy is an interface that defines the methods that an authentication strategy must implement
 type AuthStrategy interface {
 	isExpired() bool
+	isJWTProvided() bool
 	createAuthRequest() (*http.Request, error)
 	decodeAuthResponse(resp *http.Response) error
 	addAuthenticationToRequest(req *http.Request) (*http.Request, error)
@@ -145,9 +146,14 @@ func NewGenericAuthenticator(config config.Config, auth *url.URL, api *url.URL) 
 
 // Authenticate if needed and add authentication to the request
 func (s *Authenticator) AddAuthenticationToRequest(restClient *restClient, req *http.Request) (*http.Request, error) {
-	if err := s.refreshIfExpired(restClient); err != nil {
-		return nil, err
+
+	// Don't refresh auth if a JWT is provided via config
+	if !s.auth.isJWTProvided() {
+		if err := s.refreshIfExpired(restClient); err != nil {
+			return nil, err
+		}
 	}
+
 	if req, err := s.auth.addAuthenticationToRequest(req); err != nil {
 		return nil, err
 	} else {
@@ -184,6 +190,10 @@ func (s *Authenticator) refreshIfExpired(r *restClient) error {
 
 func (s *ManagedIdentityAuthStrategy) isExpired() bool {
 	return s.token.IsExpired()
+}
+
+func (s *ManagedIdentityAuthStrategy) isJWTProvided() bool {
+	return false
 }
 
 func (s *ManagedIdentityAuthStrategy) addAuthenticationToRequest(req *http.Request) (*http.Request, error) {
@@ -235,7 +245,6 @@ func (s *GenericAuthStrategy) createAuthRequest() (*http.Request, error) {
 	}
 
 	body.Add("scope", scope.ResolveReference(&defaultScope).String())
-
 	if s.refreshToken != "" {
 		body.Add("grant_type", "refresh_token")
 		body.Add("refresh_token", s.refreshToken)
@@ -269,6 +278,10 @@ func (s *GenericAuthStrategy) createAuthRequest() (*http.Request, error) {
 
 func (s *GenericAuthStrategy) isExpired() bool {
 	return s.token.IsExpired()
+}
+
+func (s *GenericAuthStrategy) isJWTProvided() bool {
+	return s.jwt != ""
 }
 
 func (s *GenericAuthStrategy) decodeAuthResponse(resp *http.Response) error {
@@ -331,4 +344,8 @@ func (s *ManagedIdentitySDKAuthStrategy) decodeAuthResponse(resp *http.Response)
 
 func (s *ManagedIdentitySDKAuthStrategy) isExpired() bool {
 	return s.token.Token == "" || s.token.ExpiresOn.Before(time.Now().Add(2*time.Minute))
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) isJWTProvided() bool {
+	return false
 }
