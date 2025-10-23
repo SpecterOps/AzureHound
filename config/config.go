@@ -355,6 +355,14 @@ var (
 		Default:    "",
 	}
 
+	UserAgent = Config{
+		Name:       "user-agent",
+		Shorthand:  "U",
+		Usage:      "Custom User-Agent header",
+		Persistent: true,
+		Default:    "",
+	}
+
 	GlobalConfig = []Config{
 		ConfigFile,
 		VerbosityLevel,
@@ -364,6 +372,7 @@ var (
 		Proxy,
 		RefreshToken,
 		Pprof,
+		UserAgent,
 	}
 
 	AzureConfig = []Config{
