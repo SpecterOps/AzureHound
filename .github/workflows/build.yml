@@ -77,6 +77,18 @@ jobs:
           push: ${{ ! startsWith(github.event_name, 'pull_request') }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
+          outputs: 'type=local dest=/tmp/azurehound.tar'
+
+      - name: Trivy scan for vulnerabilities
+        id: trivy_amd64
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
+        with:
+          input: /tmp/azurehound.tar
+          format: "json"
+          severity: "HIGH,CRITICAL"
+          ignore-unfixed: true
+          cache-dir: /tmp/trivy-cache
+          output: /tmp/trivy-report-amd64.json
 
   build:
     runs-on: ubuntu-latest
