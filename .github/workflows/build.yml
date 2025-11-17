@@ -70,24 +70,42 @@ jobs:
       - name: Build Container Image
         uses: docker/build-push-action@v6
         with:
+          platforms: "linux/amd64,linux/arm64"
           context: .
           build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ ! startsWith(github.event_name, 'pull_request') }}
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: mode=max
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
-          outputs: type=tar,dest=azurehound.tar
+          # Multi-plaform builds can not be loaded into local Docker Daemon 
+          # Must use an Open Container Image to scan for vulnerabilities.
+          outputs: type=oci,dest=/tmp/oci-image.tar
 
-      - name: Trivy scan for vulnerabilities
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
+      - name: Upload OCI tarball
+        uses: actions/upload-artifact@v4
         with:
-          input: azurehound.tar
-          format: "json"
-          severity: "HIGH,CRITICAL"
-          ignore-unfixed: true
-          cache-dir: /tmp/trivy-cache
-          output: /tmp/trivy-report-azurehound.json
+          name: oci-image-tar
+          path: /tmp/oci-image.tar
+
+      # Convert OCI Directory to Docker-compatible tars for amd64 and arm64
+      - name: Convert OCI to Docker tarballs (amd64 + arm64)
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            echo "Converting $arch image..."
+
+            if ! skopeo copy \
+              --override-arch=$arch --override-os=linux \
+              oci-archive:/tmp/oci-image.tar \
+              docker-archive:/tmp/converted-$arch.tar; then
+              echo "skopeo copy failed for $arch"
+              exit 1
+            fi
+          done
 
   build:
     runs-on: ubuntu-latest
