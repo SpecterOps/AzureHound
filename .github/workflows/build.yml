@@ -77,7 +77,7 @@ jobs:
           push: ${{ ! startsWith(github.event_name, 'pull_request') }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
-          outputs: type=tar dest=azurehound.tar
+          outputs: type=tar,dest=azurehound.tar
 
       - name: Trivy scan for vulnerabilities
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
