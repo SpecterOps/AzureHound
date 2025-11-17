@@ -76,9 +76,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          provenance: mode=max
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
           # Multi-plaform builds can not be loaded into local Docker Daemon 
