@@ -153,6 +153,16 @@ jobs:
           else
             echo "No HIGH/CRITICAL vulnerabilities found. Safe to proceed."
           fi
+                
+      - name: Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
 
   build:
     runs-on: ubuntu-latest
