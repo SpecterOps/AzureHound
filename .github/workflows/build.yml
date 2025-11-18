@@ -109,7 +109,7 @@ jobs:
       
       - name: Trivy scan for vulnerabilities (AMD64)
         id: trivy_amd64
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
         with:
           input: /tmp/converted-amd64.tar
           format: "json"
@@ -159,7 +159,7 @@ jobs:
         with:
           context: .
           build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
-          tags: ${{ steps.metadata.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ ! startsWith(github.event_name, 'pull_request') }}
           secrets: |
