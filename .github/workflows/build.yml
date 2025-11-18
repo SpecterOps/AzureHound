@@ -76,7 +76,6 @@ jobs:
       - name: Build Container Image
         uses: docker/build-push-action@v6
         with:
-          platforms: "linux/amd64,linux/arm64"
           context: .
           build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
           tags: ${{ steps.meta.outputs.tags }}
