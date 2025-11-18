@@ -76,10 +76,9 @@ jobs:
       - name: Build Container Image
         uses: docker/build-push-action@v6
         with:
-          platforms: "linux/amd64,linux/arm64"
           context: .
           build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: azurehound # temporary tag to simplify oci conversion
           labels: ${{ steps.meta.outputs.labels }}
           push: false
           secrets: |
@@ -94,21 +93,66 @@ jobs:
           name: oci-image-tar
           path: /tmp/oci-image.tar
 
-      # Convert OCI Directory to Docker-compatible tars for amd64 and arm64
-      - name: Convert OCI to Docker tarballs (amd64 + arm64)
+      # Convert OCI Directory to Docker-compatible tar for amd64
+      - name: Convert OCI to Docker tarball
         run: |
           set -euo pipefail
-          for arch in amd64 arm64; do
-            echo "Converting $arch image..."
+          echo "Converting amd64 image..."
 
-            if ! skopeo copy \
-              --override-arch=$arch --override-os=linux \
-              oci-archive:/tmp/oci-image.tar \
-              docker-archive:/tmp/converted-$arch.tar; then
-              echo "skopeo copy failed for $arch"
+          if ! skopeo copy \
+            --override-arch=amd64 --override-os=linux \
+            oci-archive:/tmp/oci-image.tar \
+            docker-archive:/tmp/converted-amd64.tar; then
+            echo "skopeo copy failed for amd64"
+            exit 1
+          fi
+      
+      - name: Trivy scan for vulnerabilities (AMD64)
+        id: trivy_amd64
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          input: /tmp/converted-amd64.tar
+          format: "json"
+          severity: "HIGH,CRITICAL"
+          ignore-unfixed: true
+          cache-dir: /tmp/trivy-cache
+          output: /tmp/trivy-report-amd64.json
+
+      - name: Upload Trivy scan reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-reports
+          path: /tmp/trivy-report-amd64.json
+    
+      - name: Check Trivy Report for HIGH/CRITICAL vulnerabilities (amd64 only)
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "Checking Trivy report for HIGH/CRITICAL vulnerabilities (amd64 only)..."
+
+          # Ensure report exists
+          if [ ! -f /tmp/trivy-report-amd64.json ]; then
+            echo "Error: /tmp/trivy-report-amd64.json not found!"
+            exit 1
+          fi
+
+          # Count vulnerabilities from amd64 report
+          total_vulns=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL")] | length' /tmp/trivy-report-amd64.json)
+
+          echo "Event: $GITHUB_EVENT_NAME"
+          echo "Total HIGH/CRITICAL vulnerabilities: $total_vulns"
+
+          if [ "$total_vulns" -gt 0 ]; then
+            # Fail only on push events
+            if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+              echo "Push event detected. Failing the job to block image push."
               exit 1
+            else
+              echo "Pull request event. Vulnerabilities found, but continuing (non-blocking)."
             fi
-          done
+          else
+            echo "No HIGH/CRITICAL vulnerabilities found. Safe to proceed."
+          fi
 
   build:
     runs-on: ubuntu-latest
