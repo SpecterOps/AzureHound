@@ -161,6 +161,7 @@ jobs:
           build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ ! startsWith(github.event_name, 'pull_request') }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
 
