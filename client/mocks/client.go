@@ -86,6 +86,20 @@ func (mr *MockAzureClientMockRecorder) GetAzureADTenants(ctx, includeAllTenantCa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureADTenants", reflect.TypeOf((*MockAzureClient)(nil).GetAzureADTenants), ctx, includeAllTenantCategories)
 }
 
+// ListAzureADAppFICs mocks base method.
+func (m *MockAzureClient) ListAzureADAppFICs(ctx context.Context, objectId string, params query.GraphParams) <-chan client.AzureResult[json.RawMessage] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureADAppFICs", ctx, objectId, params)
+	ret0, _ := ret[0].(<-chan client.AzureResult[json.RawMessage])
+	return ret0
+}
+
+// ListAzureADAppFICs indicates an expected call of ListAzureADAppFICs.
+func (mr *MockAzureClientMockRecorder) ListAzureADAppFICs(ctx, objectId, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureADAppFICs", reflect.TypeOf((*MockAzureClient)(nil).ListAzureADAppFICs), ctx, objectId, params)
+}
+
 // ListAzureADAppOwners mocks base method.
 func (m *MockAzureClient) ListAzureADAppOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan client.AzureResult[json.RawMessage] {
 	m.ctrl.T.Helper()
