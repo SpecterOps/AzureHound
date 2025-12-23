@@ -128,8 +128,13 @@ func NewRequest(
 			req.Header.Set("Accept", "application/json")
 		}
 
-		// set azurehound as user-agent
-		req.Header.Set("User-Agent", constants.UserAgent())
+		// set azurehound as user-agent, use custom if set in config
+		ua := config.UserAgent.Value()
+		if s, ok := ua.(string); ok && s != "" {
+			req.Header.Set("User-Agent", s)
+		} else {
+			req.Header.Set("User-Agent", constants.UserAgent())
+		}
 		return req, nil
 	}
 }
