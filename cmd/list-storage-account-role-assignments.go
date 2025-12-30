@@ -110,7 +110,7 @@ func listStorageAccountRoleAssignments(ctx context.Context, client client.AzureC
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found storage account role assignment", "storageAccountRoleAssignment", storageAccountRoleAssignment)
+						log.V(2).Info("found storage account role assignment", "id", storageAccountRoleAssignment.ObjectId, "roleDefinitionId", storageAccountRoleAssignment.RoleDefinitionId, "principalId", storageAccountRoleAssignment.Assignee.GetPrincipalId())
 						count++
 						storageAccountRoleAssignments.RoleAssignments = append(storageAccountRoleAssignments.RoleAssignments, storageAccountRoleAssignment)
 					}

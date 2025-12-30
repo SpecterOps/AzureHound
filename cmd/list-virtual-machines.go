@@ -102,7 +102,7 @@ func listVirtualMachines(ctx context.Context, client client.AzureClient, subscri
 							ResourceGroupId: item.Ok.ResourceGroupId(),
 							TenantId:        client.TenantInfo().TenantId,
 						}
-						log.V(2).Info("found virtual machine", "virtualMachine", virtualMachine)
+						log.V(2).Info("found virtual machine", "id", virtualMachine.Id, "name", virtualMachine.Name, "tenantId", virtualMachine.TenantId)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZVM,

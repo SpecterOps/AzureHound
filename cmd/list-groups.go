@@ -70,7 +70,7 @@ func listGroups(ctx context.Context, client client.AzureClient) <-chan interface
 				log.Error(item.Error, "unable to continue processing groups")
 				return
 			} else {
-				log.V(2).Info("found group", "group", item)
+				log.V(2).Info("found group", "id", item.Ok.Id, "name", item.Ok.DisplayName)
 				count++
 				group := models.Group{
 					Group:      item.Ok,

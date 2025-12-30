@@ -110,7 +110,7 @@ func listFunctionAppRoleAssignments(ctx context.Context, client client.AzureClie
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("Found function app role asignment", "functionAppRoleAssignment", functionAppRoleAssignment)
+						log.V(2).Info("Found function app role assignment", "id", id, "roleDefinitionId", roleDefinitionId, "principalId", functionAppRoleAssignment.Assignee.Properties.PrincipalId, "scope", functionAppRoleAssignment.Assignee.Properties.Scope)
 						count++
 						functionAppRoleAssignments.RoleAssignments = append(functionAppRoleAssignments.RoleAssignments, functionAppRoleAssignment)
 					}

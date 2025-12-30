@@ -106,7 +106,7 @@ func listSubscriptionRoleAssignments(ctx context.Context, client client.AzureCli
 							SubscriptionId: id,
 							RoleAssignment: item.Ok,
 						}
-						log.V(2).Info("found subscription role assignment", "subscriptionRoleAssignment", subscriptionRoleAssignment)
+						log.V(2).Info("found subscription role assignment", "id", subscriptionRoleAssignment.RoleAssignment.Id, "name", subscriptionRoleAssignment.RoleAssignment.Name)
 						count++
 						subscriptionRoleAssignments.RoleAssignments = append(subscriptionRoleAssignments.RoleAssignments, subscriptionRoleAssignment)
 					}

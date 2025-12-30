@@ -106,7 +106,7 @@ func listKeyVaultRoleAssignments(ctx context.Context, client client.AzureClient,
 							KeyVaultId:     id,
 							RoleAssignment: item.Ok,
 						}
-						log.V(2).Info("found key vault role assignment", "keyVaultRoleAssignment", keyVaultRoleAssignment)
+						log.V(2).Info("found key vault role assignment", "id", keyVaultRoleAssignment.RoleAssignment.Id, "keyVaultId", keyVaultRoleAssignment.KeyVaultId)
 						count++
 						keyVaultRoleAssignments.RoleAssignments = append(keyVaultRoleAssignments.RoleAssignments, keyVaultRoleAssignment)
 					}

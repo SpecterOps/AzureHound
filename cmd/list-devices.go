@@ -70,7 +70,7 @@ func listDevices(ctx context.Context, client client.AzureClient) <-chan interfac
 				log.Error(item.Error, "unable to continue processing devices")
 				return
 			} else {
-				log.V(2).Info("found device", "device", item)
+				log.V(2).Info("found device", "deviceId", item.Ok.DeviceId)
 				count++
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZDevice,

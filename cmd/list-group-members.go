@@ -116,7 +116,7 @@ func listGroupMembers(ctx context.Context, client client.AzureClient, groups <-c
 							Member:  item.Ok,
 							GroupId: id,
 						}
-						log.V(2).Info("found group member", "groupMember", groupMember)
+						log.V(2).Info("found group member", "groupId", groupMember.GroupId)
 						count++
 						data.Members = append(data.Members, groupMember)
 					}

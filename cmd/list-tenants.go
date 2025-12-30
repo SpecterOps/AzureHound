@@ -81,7 +81,7 @@ func listTenants(ctx context.Context, client client.AzureClient) <-chan interfac
 				log.Error(item.Error, "unable to continue processing tenants")
 				return
 			} else {
-				log.V(2).Info("found tenant", "tenant", item)
+				log.V(2).Info("found tenant", "id", item.Ok.Id, "name", item.Ok.DisplayName, "tenantId", item.Ok.TenantId)
 				count++
 
 				// Send the remaining tenant trusts

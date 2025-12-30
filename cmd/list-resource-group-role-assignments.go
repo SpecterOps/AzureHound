@@ -107,7 +107,7 @@ func listResourceGroupRoleAssignments(ctx context.Context, client client.AzureCl
 							ResourceGroupId: id,
 							RoleAssignment:  item.Ok,
 						}
-						log.V(2).Info("found resourceGroup role assignment", "resourceGroupRoleAssignment", resourceGroupRoleAssignment)
+						log.V(2).Info("found resourceGroup role assignment", "id", resourceGroupRoleAssignment.RoleAssignment.Id, "name", resourceGroupRoleAssignment.RoleAssignment.Name, "resourceGroupId", resourceGroupRoleAssignment.ResourceGroupId)
 						count++
 						resourceGroupRoleAssignments.RoleAssignments = append(resourceGroupRoleAssignments.RoleAssignments, resourceGroupRoleAssignment)
 					}

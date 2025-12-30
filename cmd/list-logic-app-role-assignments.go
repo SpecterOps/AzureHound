@@ -115,7 +115,7 @@ func listLogicAppRoleAssignments(ctx context.Context, client client.AzureClient,
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found logic app role assignment", "logicappRoleAssignment", logicappRoleAssignment)
+						log.V(2).Info("found logic app role assignment", "id", logicappRoleAssignment.ObjectId, "roleDefinitionId", roleDefinitionId)
 						count++
 						logicappRoleAssignments.RoleAssignments = append(logicappRoleAssignments.RoleAssignments, logicappRoleAssignment)
 					}

@@ -88,7 +88,7 @@ func listSubscriptionOwners(ctx context.Context, client client.AzureClient, role
 							Owner:          item.RoleAssignment,
 							SubscriptionId: item.SubscriptionId,
 						}
-						log.V(2).Info("found subscription owner", "subscriptionOwner", subscriptionOwner)
+						log.V(2).Info("found subscription owner", "principalId", subscriptionOwner.Owner.GetPrincipalId(), "role", subscriptionOwner.Owner.Name, "subscriptionId", subscriptionOwner.SubscriptionId)
 						count++
 						subscriptionOwners.Owners = append(subscriptionOwners.Owners, subscriptionOwner)
 					}
