@@ -110,7 +110,7 @@ func listAutomationAccountRoleAssignments(ctx context.Context, client client.Azu
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found automation account role assignment", "id", automationAccountRoleAssignment.ObjectId, "roleDefinitionId", automationAccountRoleAssignment.RoleDefinitionId)
+						log.V(2).Info("found automation account role assignment", "roleDefinitionId", automationAccountRoleAssignment.RoleDefinitionId)
 						count++
 						automationAccountRoleAssignments.RoleAssignments = append(automationAccountRoleAssignments.RoleAssignments, automationAccountRoleAssignment)
 					}

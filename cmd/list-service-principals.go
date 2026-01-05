@@ -70,7 +70,7 @@ func listServicePrincipals(ctx context.Context, client client.AzureClient) <-cha
 				log.Error(item.Error, "unable to continue processing service principals")
 				return
 			} else {
-				log.V(2).Info("found service principal", "id", item.Ok.Id, "name", item.Ok.DisplayName, "appId", item.Ok.AppId)
+				log.V(2).Info("found service principal", "name", item.Ok.DisplayName)
 				count++
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZServicePrincipal,

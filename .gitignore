@@ -132,6 +132,7 @@ $RECYCLE.BIN/
 
 # Plugin metadata
 .idea/**/go.imports.xml
+.idea/**/material_theme_project_new.xml
 
 # Sensitive or high-churn files
 .idea/**/dataSources/

@@ -71,7 +71,7 @@ func listManagementGroups(ctx context.Context, client client.AzureClient) <-chan
 				log.Info("warning: unable to process azure management groups; either the organization has no management groups or azurehound does not have the reader role on the root management group.")
 				return
 			} else if len(config.AzMgmtGroupId.Value().([]string)) == 0 || contains(config.AzMgmtGroupId.Value().([]string), item.Ok.Name) {
-				log.V(2).Info("found management group", "id", item.Ok.Id, "name", item.Ok.Name)
+				log.V(2).Info("found management group", "name", item.Ok.Name)
 				count++
 				mgmtGroup := models.ManagementGroup{
 					ManagementGroup: item.Ok,

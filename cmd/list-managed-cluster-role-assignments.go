@@ -115,7 +115,7 @@ func listManagedClusterRoleAssignments(ctx context.Context, client client.AzureC
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found managed cluster role assignment", "id", managedClusterRoleAssignment.ObjectId, "roleDefinitionId", managedClusterRoleAssignment.RoleDefinitionId, "principalId", managedClusterRoleAssignment.Assignee.GetPrincipalId())
+						log.V(2).Info("found managed cluster role assignment", "roleDefinitionId", managedClusterRoleAssignment.RoleDefinitionId)
 						count++
 						managedClusterRoleAssignments.RoleAssignments = append(managedClusterRoleAssignments.RoleAssignments, managedClusterRoleAssignment)
 					}

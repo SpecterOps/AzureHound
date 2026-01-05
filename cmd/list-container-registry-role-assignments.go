@@ -115,7 +115,7 @@ func listContainerRegistryRoleAssignments(ctx context.Context, client client.Azu
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found container registry role assignment", "id", id, "principalId", item.Ok.GetPrincipalId(), "roleDefinitionId", containerRegistryRoleAssignment.RoleDefinitionId, "scope", containerRegistryRoleAssignment.Assignee.Properties.Scope)
+						log.V(2).Info("found container registry role assignment", "roleDefinitionId", roleDefinitionId)
 						count++
 						containerRegistryRoleAssignments.RoleAssignments = append(containerRegistryRoleAssignments.RoleAssignments, containerRegistryRoleAssignment)
 					}

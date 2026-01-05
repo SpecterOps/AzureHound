@@ -108,7 +108,7 @@ func listWebApps(ctx context.Context, client client.AzureClient, subscriptions <
 							TenantId:          client.TenantInfo().TenantId,
 						}
 						if webApp.Kind == "app" {
-							log.V(2).Info("found web app", "id", webApp.Id, "name", webApp.Name)
+							log.V(2).Info("found web app", "name", webApp.Name)
 							count++
 							if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 								Kind: enums.KindAZWebApp,

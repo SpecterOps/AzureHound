@@ -115,7 +115,7 @@ func listVMScaleSetRoleAssignments(ctx context.Context, client client.AzureClien
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("found vm scale set role assignment", "id", vmScaleSetRoleAssignment.ObjectId, "roleId", vmScaleSetRoleAssignment.RoleDefinitionId)
+						log.V(2).Info("found vm scale set role assignment", "roleId", vmScaleSetRoleAssignment.RoleDefinitionId)
 						count++
 						vmScaleSetRoleAssignments.RoleAssignments = append(vmScaleSetRoleAssignments.RoleAssignments, vmScaleSetRoleAssignment)
 					}

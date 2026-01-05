@@ -102,7 +102,7 @@ func listAutomationAccounts(ctx context.Context, client client.AzureClient, subs
 							ResourceGroupId:   resourceGroupId,
 							TenantId:          client.TenantInfo().TenantId,
 						}
-						log.V(2).Info("found automation account", "id", automationAccount.Id, "name", automationAccount.Name)
+						log.V(2).Info("found automation account", "name", automationAccount.Name)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZAutomationAccount,

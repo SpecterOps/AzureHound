@@ -111,7 +111,7 @@ func listLogicApps(ctx context.Context, client client.AzureClient, subscriptions
 							ResourceGroupId: item.Ok.ResourceGroupId(),
 							TenantId:        client.TenantInfo().TenantId,
 						}
-						log.V(2).Info("found logicapp", "id", logicapp.Id, "name", logicapp.Name)
+						log.V(2).Info("found logicapp", "name", logicapp.Name)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZLogicApp,

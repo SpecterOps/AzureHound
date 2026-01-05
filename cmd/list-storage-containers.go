@@ -110,7 +110,7 @@ func listStorageContainers(ctx context.Context, client client.AzureClient, stora
 							ResourceGroupName: item.Ok.ResourceGroupName(),
 							TenantId:          client.TenantInfo().TenantId,
 						}
-						log.V(2).Info("found storage container", "id", storageContainer.Id, "name", storageContainer.Name, "tenant", storageContainer.TenantId)
+						log.V(2).Info("found storage container", "name", storageContainer.Name)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZStorageContainer,

@@ -96,7 +96,7 @@ func listManagementGroupDescendants(ctx context.Context, client client.AzureClie
 					if item.Error != nil {
 						log.Error(item.Error, "unable to continue processing descendants for this management group", "managementGroupId", id)
 					} else {
-						log.V(2).Info("found management group descendant", "type", item.Ok.Type, "id", item.Ok.Id, "parent", item.Ok.Properties.Parent.Id)
+						log.V(2).Info("found management group descendant", "name", item.Ok.Name)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZManagementGroupDescendant,
