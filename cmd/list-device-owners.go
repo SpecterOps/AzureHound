@@ -105,7 +105,7 @@ func listDeviceOwners(ctx context.Context, client client.AzureClient, devices <-
 							Owner:    item.Ok,
 							DeviceId: id,
 						}
-						log.V(2).Info("found device owner", "deviceOwner", deviceOwner)
+						log.V(2).Info("found device owner", "deviceId", deviceOwner.DeviceId)
 						count++
 						data.Owners = append(data.Owners, deviceOwner)
 					}

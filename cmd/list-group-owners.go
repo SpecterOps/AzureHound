@@ -106,7 +106,7 @@ func listGroupOwners(ctx context.Context, client client.AzureClient, groups <-ch
 							Owner:   item.Ok,
 							GroupId: id,
 						}
-						log.V(2).Info("found group owner", "groupOwner", groupOwner)
+						log.V(2).Info("found group owner", "groupId", groupOwner.GroupId)
 						count++
 						groupOwners.Owners = append(groupOwners.Owners, groupOwner)
 					}

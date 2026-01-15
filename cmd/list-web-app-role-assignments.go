@@ -115,7 +115,7 @@ func listWebAppRoleAssignments(ctx context.Context, client client.AzureClient, w
 							ObjectId:         id,
 							RoleDefinitionId: roleDefinitionId,
 						}
-						log.V(2).Info("Found web app role asignment", "webAppRoleAssignment", webAppRoleAssignment)
+						log.V(2).Info("Found web app role assignment", "roleDefinitionId", webAppRoleAssignment.RoleDefinitionId)
 						count++
 						webAppRoleAssignments.RoleAssignments = append(webAppRoleAssignments.RoleAssignments, webAppRoleAssignment)
 					}

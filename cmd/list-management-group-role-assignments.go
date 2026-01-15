@@ -106,7 +106,7 @@ func listManagementGroupRoleAssignments(ctx context.Context, client client.Azure
 							ManagementGroupId: id,
 							RoleAssignment:    item.Ok,
 						}
-						log.V(2).Info("found managementGroup role assignment", "managementGroupRoleAssignment", managementGroupRoleAssignment)
+						log.V(2).Info("found managementGroup role assignment", "name", managementGroupRoleAssignment.RoleAssignment.Name)
 						count++
 						managementGroupRoleAssignments.RoleAssignments = append(managementGroupRoleAssignments.RoleAssignments, managementGroupRoleAssignment)
 					}

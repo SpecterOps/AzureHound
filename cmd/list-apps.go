@@ -70,7 +70,7 @@ func listApps(ctx context.Context, client client.AzureClient) <-chan azureWrappe
 				log.Error(item.Error, "unable to continue processing applications")
 				return
 			} else {
-				log.V(2).Info("found application", "app", item)
+				log.V(2).Info("found application", "id", item.Ok.AppId, "name", item.Ok.DisplayName)
 				count++
 				if ok := pipeline.Send(ctx.Done(), out, NewAzureWrapper(
 					enums.KindAZApp,
