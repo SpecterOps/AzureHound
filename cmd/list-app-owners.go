@@ -89,7 +89,7 @@ func listAppOwners(ctx context.Context, client client.AzureClient, apps <-chan a
 							Owner: item.Ok,
 							AppId: app.Data.Id,
 						}
-						log.V(2).Info("found app owner", "appOwner", appOwner)
+						log.V(2).Info("found app owner", "appId", appOwner.AppId)
 						count++
 						data.Owners = append(data.Owners, appOwner)
 					}

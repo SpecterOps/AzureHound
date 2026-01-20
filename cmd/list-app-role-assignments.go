@@ -102,7 +102,7 @@ func listAppRoleAssignments(ctx context.Context, client client.AzureClient, serv
 					if item.Error != nil {
 						log.Error(item.Error, "unable to continue processing app role assignments for this service principal", "servicePrincipalId", servicePrincipal)
 					} else {
-						log.V(2).Info("found app role assignment", "roleAssignments", item)
+						log.V(2).Info("found app role assignment", "appRoleId", item.Ok.AppRoleId)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZAppRoleAssignment,

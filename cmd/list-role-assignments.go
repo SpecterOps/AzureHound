@@ -106,7 +106,7 @@ func listRoleAssignments(ctx context.Context, client client.AzureClient, roles <
 					if item.Error != nil {
 						log.Error(item.Error, "unable to continue processing role assignments for this role", "roleDefinitionId", id)
 					} else {
-						log.V(2).Info("found role assignment", "roleAssignments", item)
+						log.V(2).Info("found role assignment", "id", item.Ok.Id)
 						count++
 						// To ensure proper linking to AZApp nodes we want to supply the AppId instead when role assignments are app specific scoped
 						if item.Ok.DirectoryScopeId != "/" {

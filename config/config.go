@@ -72,9 +72,13 @@ const EnvPrefix string = "AZUREHOUND"
 var AzRegions = []string{
 	constants.China,
 	constants.Cloud,
-	constants.Germany,
 	constants.USGovL4,
 	constants.USGovL5,
+}
+
+var ManagedIdentityTypes = []string{
+	"System-Assigned Identity",
+	"User-Assigned Identity",
 }
 
 var (
@@ -244,6 +248,13 @@ var (
 		Default:    bool(false),
 	}
 
+	AzManagedIdentityClientId = Config{
+		Name:       "managed-identity-client-id",
+		Shorthand:  "",
+		Usage:      "Client ID used to authenticate via Managed Identity SDK",
+		Persistent: true,
+		Default:    "",
+	}
 	// BHE Configurations
 	BHEUrl = Config{
 		Name:       "instance",
@@ -270,6 +281,16 @@ var (
 		Persistent: true,
 		Required:   true,
 		Default:    "",
+	}
+
+	BHEMaxReqPerConn = Config{
+		Name:      "maxReqsPerConn",
+		Shorthand: "",
+		Usage:     "The number of requests a single HTTP connection can make, when this limit is reached, a new HTTP connection will be established with the server",
+		Required:  false,
+		Default:   10_000,
+		MinValue:  1,
+		MaxValue:  10_000,
 	}
 
 	ColBatchSize = Config{
@@ -333,6 +354,14 @@ var (
 		Default:    "",
 	}
 
+	UserAgent = Config{
+		Name:       "user-agent",
+		Shorthand:  "U",
+		Usage:      "Custom User-Agent header",
+		Persistent: true,
+		Default:    "",
+	}
+
 	GlobalConfig = []Config{
 		ConfigFile,
 		VerbosityLevel,
@@ -342,6 +371,7 @@ var (
 		Proxy,
 		RefreshToken,
 		Pprof,
+		UserAgent,
 	}
 
 	AzureConfig = []Config{
@@ -360,12 +390,14 @@ var (
 		AzSubId,
 		AzMgmtGroupId,
 		AzUseManagedIdentity,
+		AzManagedIdentityClientId,
 	}
 
 	BloodHoundEnterpriseConfig = []Config{
 		BHEUrl,
 		BHETokenId,
 		BHEToken,
+		BHEMaxReqPerConn,
 	}
 
 	CollectionConfig = []Config{

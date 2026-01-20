@@ -24,7 +24,11 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/bloodhoundad/azurehound/v2/client/config"
 	"github.com/bloodhoundad/azurehound/v2/constants"
 )
@@ -32,6 +36,7 @@ import (
 // AuthStrategy is an interface that defines the methods that an authentication strategy must implement
 type AuthStrategy interface {
 	isExpired() bool
+	isJWTProvided() bool
 	createAuthRequest() (*http.Request, error)
 	decodeAuthResponse(resp *http.Response) error
 	addAuthenticationToRequest(req *http.Request) (*http.Request, error)
@@ -50,6 +55,14 @@ type ManagedIdentityAuthStrategy struct {
 	api     url.URL
 	tenant  string
 	token   Token
+}
+
+// ManagedIdentitySDKAuthStrategy is an authentication strategy that uses Azure Managed Identity SDK
+type ManagedIdentitySDKAuthStrategy struct {
+	credential *azidentity.ManagedIdentityCredential
+	resource   url.URL
+	token      azcore.AccessToken
+	mutex      sync.Mutex
 }
 
 // GenericAuthStrategy is an authentication strategy that uses a bunch of pre-existing authentication methods (TODO: Break this up)
@@ -83,6 +96,32 @@ func NewManagedIdentityAuthenticator(config config.Config, auth *url.URL, api *u
 	}
 }
 
+func GetManagedIdentityCredential(config config.Config) (*azidentity.ManagedIdentityCredential, error) {
+	options := &azidentity.ManagedIdentityCredentialOptions{
+		ID: azidentity.ClientID(config.ManagedIdentityClientId),
+	}
+	cred, err := azidentity.NewManagedIdentityCredential(options)
+	if err != nil {
+		optionsFallback := &azidentity.ManagedIdentityCredentialOptions{}
+		cred, err = azidentity.NewManagedIdentityCredential(optionsFallback)
+		if err != nil {
+			return nil, fmt.Errorf("failed to authenticate with managed identity: %w", err)
+		}
+	}
+	return cred, nil
+}
+
+// NewManagedIdentitySDKAuthenticator creates a new Authenticator using the ManagedIdentitySDKAuthStrategy
+func NewManagedIdentitySDKAuthenticator(config config.Config, resource *url.URL, cred *azidentity.ManagedIdentityCredential) *Authenticator {
+	return &Authenticator{
+		auth: &ManagedIdentitySDKAuthStrategy{
+			credential: cred,
+			resource:   *resource,
+		},
+		mutex: sync.RWMutex{},
+	}
+}
+
 // NewGenericAuthenticator creates a new Authenticator using the GenericAuthStrategy (The collection of pre-existing authentication methods)
 func NewGenericAuthenticator(config config.Config, auth *url.URL, api *url.URL) *Authenticator {
 	return &Authenticator{
@@ -107,9 +146,14 @@ func NewGenericAuthenticator(config config.Config, auth *url.URL, api *url.URL) 
 
 // Authenticate if needed and add authentication to the request
 func (s *Authenticator) AddAuthenticationToRequest(restClient *restClient, req *http.Request) (*http.Request, error) {
-	if err := s.refreshIfExpired(restClient); err != nil {
-		return nil, err
+
+	// Don't refresh auth if a JWT is provided via config
+	if !s.auth.isJWTProvided() {
+		if err := s.refreshIfExpired(restClient); err != nil {
+			return nil, err
+		}
 	}
+
 	if req, err := s.auth.addAuthenticationToRequest(req); err != nil {
 		return nil, err
 	} else {
@@ -123,9 +167,14 @@ func (s *Authenticator) refreshIfExpired(r *restClient) error {
 		return nil
 	}
 	// Authenticate
-	if authRequest, err := s.auth.createAuthRequest(); err != nil {
+	authRequest, err := s.auth.createAuthRequest()
+	if err != nil {
 		return err
-	} else if authResponse, err := r.send(authRequest); err != nil {
+	}
+	if authRequest == nil {
+		return nil
+	}
+	if authResponse, err := r.send(authRequest); err != nil {
 		return err
 	} else {
 		defer authResponse.Body.Close()
@@ -141,6 +190,10 @@ func (s *Authenticator) refreshIfExpired(r *restClient) error {
 
 func (s *ManagedIdentityAuthStrategy) isExpired() bool {
 	return s.token.IsExpired()
+}
+
+func (s *ManagedIdentityAuthStrategy) isJWTProvided() bool {
+	return false
 }
 
 func (s *ManagedIdentityAuthStrategy) addAuthenticationToRequest(req *http.Request) (*http.Request, error) {
@@ -192,7 +245,6 @@ func (s *GenericAuthStrategy) createAuthRequest() (*http.Request, error) {
 	}
 
 	body.Add("scope", scope.ResolveReference(&defaultScope).String())
-
 	if s.refreshToken != "" {
 		body.Add("grant_type", "refresh_token")
 		body.Add("refresh_token", s.refreshToken)
@@ -228,6 +280,10 @@ func (s *GenericAuthStrategy) isExpired() bool {
 	return s.token.IsExpired()
 }
 
+func (s *GenericAuthStrategy) isJWTProvided() bool {
+	return s.jwt != ""
+}
+
 func (s *GenericAuthStrategy) decodeAuthResponse(resp *http.Response) error {
 	if err := json.NewDecoder(resp.Body).Decode(&s.token); err != nil {
 		return err
@@ -248,4 +304,49 @@ func (s *GenericAuthStrategy) addAuthenticationToRequest(req *http.Request) (*ht
 		req.Header.Set("Authorization", s.token.String())
 	}
 	return req, nil
+}
+
+// Adds the access token to the outgoing HTTP request
+func (s *ManagedIdentitySDKAuthStrategy) addAuthenticationToRequest(req *http.Request) (*http.Request, error) {
+	token := s.token
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if token.Token == "" || token.ExpiresOn.Before(time.Now().Add(2*time.Minute)) {
+		if err := s.refreshToken(req.Context()); err != nil {
+			return nil, err
+		}
+		token = s.token
+	}
+	req.Header.Set("Authorization", "Bearer "+token.Token)
+	return req, nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) refreshToken(ctx context.Context) error {
+	token, err := s.credential.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{s.resource.String() + "/.default"},
+	})
+	if err != nil {
+		return err
+	}
+	s.token = token
+	return nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) createAuthRequest() (*http.Request, error) {
+	// Not used in SDK-based flow, return nil
+	return nil, nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) decodeAuthResponse(resp *http.Response) error {
+	// Not used in SDK-based flow, do nothing
+	return nil
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) isExpired() bool {
+	return s.token.Token == "" || s.token.ExpiresOn.Before(time.Now().Add(2*time.Minute))
+}
+
+func (s *ManagedIdentitySDKAuthStrategy) isJWTProvided() bool {
+	// Not used in SDK-based flow, do nothing
+	return false
 }
