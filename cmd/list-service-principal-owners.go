@@ -106,7 +106,7 @@ func listServicePrincipalOwners(ctx context.Context, client client.AzureClient, 
 							Owner:              item.Ok,
 							ServicePrincipalId: id,
 						}
-						log.V(2).Info("found service principal owner", "servicePrincipalOwner", servicePrincipalOwner)
+						log.V(2).Info("found service principal owner", "servicePrincipalId", servicePrincipalOwner.ServicePrincipalId)
 						count++
 						servicePrincipalOwners.Owners = append(servicePrincipalOwners.Owners, servicePrincipalOwner)
 					}

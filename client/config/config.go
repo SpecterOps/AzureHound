@@ -51,8 +51,6 @@ func AuthorityUrl(region string, defaultUrl string) string {
 		return constants.AzureChina().ActiveDirectoryAuthority
 	case constants.Cloud:
 		return constants.AzureCloud().ActiveDirectoryAuthority
-	case constants.Germany:
-		return constants.AzureGermany().ActiveDirectoryAuthority
 	case constants.USGovL4:
 		return constants.AzureUSGovernment().ActiveDirectoryAuthority
 	case constants.USGovL5:
@@ -72,8 +70,6 @@ func GraphUrl(region string, defaultUrl string) string {
 		return constants.AzureChina().MicrosoftGraphUrl
 	case constants.Cloud:
 		return constants.AzureCloud().MicrosoftGraphUrl
-	case constants.Germany:
-		return constants.AzureGermany().MicrosoftGraphUrl
 	case constants.USGovL4:
 		return constants.AzureUSGovernment().MicrosoftGraphUrl
 	case constants.USGovL5:
@@ -93,8 +89,6 @@ func ResourceManagerUrl(region string, defaultUrl string) string {
 		return constants.AzureChina().ResourceManagerUrl
 	case constants.Cloud:
 		return constants.AzureCloud().ResourceManagerUrl
-	case constants.Germany:
-		return constants.AzureGermany().ResourceManagerUrl
 	case constants.USGovL4:
 		return constants.AzureUSGovernment().ResourceManagerUrl
 	case constants.USGovL5:

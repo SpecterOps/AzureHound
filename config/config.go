@@ -72,7 +72,6 @@ const EnvPrefix string = "AZUREHOUND"
 var AzRegions = []string{
 	constants.China,
 	constants.Cloud,
-	constants.Germany,
 	constants.USGovL4,
 	constants.USGovL5,
 }

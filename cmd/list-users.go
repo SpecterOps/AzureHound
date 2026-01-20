@@ -84,7 +84,7 @@ func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{
 				log.Error(item.Error, "unable to continue processing users")
 				return
 			} else {
-				log.V(2).Info("found user", "user", item)
+				log.V(2).Info("found user", "id", item.Ok.Id)
 				count++
 				user := models.User{
 					User:       item.Ok,

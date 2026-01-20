@@ -88,7 +88,7 @@ func listSubscriptionUserAccessAdmins(ctx context.Context, client client.AzureCl
 							UserAccessAdmin: item.RoleAssignment,
 							SubscriptionId:  item.SubscriptionId,
 						}
-						log.V(2).Info("found subscription user access admin", "subscriptionUserAccessAdmin", subscriptionUserAccessAdmin)
+						log.V(2).Info("found subscription user access admin", "name", subscriptionUserAccessAdmin.UserAccessAdmin.Name)
 						count++
 						subscriptionUserAccessAdmins.UserAccessAdmins = append(subscriptionUserAccessAdmins.UserAccessAdmins, subscriptionUserAccessAdmin)
 					}

@@ -105,7 +105,7 @@ func listKeyVaults(ctx context.Context, client client.AzureClient, subscriptions
 							ResourceGroup:  item.Ok.ResourceGroupId(),
 							TenantId:       item.Ok.Properties.TenantId,
 						}
-						log.V(2).Info("found key vault", "keyVault", keyVault)
+						log.V(2).Info("found key vault", "name", keyVault.Name)
 						count++
 						if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 							Kind: enums.KindAZKeyVault,

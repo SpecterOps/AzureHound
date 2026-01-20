@@ -73,7 +73,7 @@ func listRoleAssignmentPolicies(ctx context.Context, azClient client.AzureClient
 
 				formattedItem.TenantId = azClient.TenantInfo().TenantId
 
-				log.V(2).Info("found unified role assignment policy", "unifiedRoleAssignmentPolicy", formattedItem)
+				log.V(2).Info("found unified role assignment policy", "policyId", formattedItem.UnifiedRoleManagementPolicyAssignment.Policy.Id)
 				count++
 
 				if ok := pipeline.SendAny(ctx.Done(), out, azureWrapper[models.RoleManagementPolicyAssignment]{
