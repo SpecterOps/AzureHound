@@ -24,7 +24,6 @@ const (
 	KindAZAppMember                       Kind = "AZAppMember"
 	KindAZAppOwner                        Kind = "AZAppOwner"
 	KindAZDevice                          Kind = "AZDevice"
-	KindAZDeviceOwner                     Kind = "AZDeviceOwner"
 	KindAZGroup                           Kind = "AZGroup"
 	KindAZGroupMember                     Kind = "AZGroupMember"
 	KindAZGroupOwner                      Kind = "AZGroupOwner"
