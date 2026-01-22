@@ -98,7 +98,7 @@ func listAppRoleAssignments(ctx context.Context, client client.AzureClient, serv
 				var (
 					count = 0
 				)
-				for item := range client.ListAzureADAppRoleAssignments(ctx, servicePrincipal.Id, query.GraphParams{}) {
+				for item := range client.ListAzureADAppRoleAssignments(ctx, servicePrincipal.ID, query.GraphParams{}) {
 					if item.Error != nil {
 						log.Error(item.Error, "unable to continue processing app role assignments for this service principal", "servicePrincipalId", servicePrincipal)
 					} else {
@@ -116,7 +116,7 @@ func listAppRoleAssignments(ctx context.Context, client client.AzureClient, serv
 						}
 					}
 				}
-				log.V(1).Info("finished listing app role assignments", "appId", servicePrincipal.AppId, "servicePrincipalId", servicePrincipal.Id, "count", count)
+				log.V(1).Info("finished listing app role assignments", "appId", servicePrincipal.AppId, "servicePrincipalId", servicePrincipal.ID, "count", count)
 			}
 		}()
 	}
