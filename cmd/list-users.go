@@ -70,6 +70,7 @@ func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{
 		"mail",
 		"onPremisesSecurityIdentifier",
 		"onPremisesSyncEnabled",
+		"signInActivity",
 		"userPrincipalName",
 		"userType",
 		"id",
