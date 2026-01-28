@@ -215,6 +215,12 @@ type User struct {
 	// Returned only on `$select`
 	LastPasswordChangeDateTime string `json:"lastPasswordChangeDateTime,omitempty"`
 
+	// The last time the user successfully signed in, in ISO 8601 format (UTC time).
+	//
+	// This value is sourced from the Microsoft Graph `signInActivity` dictionary.
+	// To populate it, the client must include `signInActivity` in `$select`.
+	LastSuccessfulSignInDateTime string `json:"lastSuccessfulSignInDateTime,omitempty"`
+
 	// Used by enterprise applications to determine the legal age group of the user.
 	//
 	// Returned only on `$select`

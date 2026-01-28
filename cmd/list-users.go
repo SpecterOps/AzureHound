@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
@@ -61,29 +62,36 @@ func listUsersCmdImpl(cmd *cobra.Command, _ []string) {
 func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{} {
 	out := make(chan interface{})
 
-	params := query.GraphParams{Select: []string{
-		"accountEnabled",
-		"createdDateTime",
-		"displayName",
-		"jobTitle",
-		"lastPasswordChangeDateTime",
-		"mail",
-		"onPremisesSecurityIdentifier",
-		"onPremisesSyncEnabled",
-		"userPrincipalName",
-		"userType",
-		"id",
-	}}
+	makeParams := func(includeSignInActivity bool) query.GraphParams {
+		selectCols := []string{
+			"accountEnabled",
+			"createdDateTime",
+			"displayName",
+			"jobTitle",
+			"lastPasswordChangeDateTime",
+			"mail",
+			"onPremisesSecurityIdentifier",
+			"onPremisesSyncEnabled",
+			"userPrincipalName",
+			"userType",
+			"id",
+		}
+		if includeSignInActivity {
+			selectCols = append(selectCols, "signInActivity")
+		}
+		return query.GraphParams{Select: selectCols}
+	}
 
 	go func() {
 		defer panicrecovery.PanicRecovery()
 		defer close(out)
-		count := 0
-		for item := range client.ListAzureADUsers(ctx, params) {
-			if item.Error != nil {
-				log.Error(item.Error, "unable to continue processing users")
-				return
-			} else {
+
+		streamOnce := func(params query.GraphParams) (int, error) {
+			count := 0
+			for item := range client.ListAzureADUsers(ctx, params) {
+				if item.Error != nil {
+					return count, item.Error
+				}
 				log.V(2).Info("found user", "id", item.Ok.Id)
 				count++
 				user := models.User{
@@ -95,12 +103,36 @@ func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{
 					Kind: enums.KindAZUser,
 					Data: user,
 				}); !ok {
-					return
+					return count, nil
 				}
 			}
+			return count, nil
+		}
+
+		includeSignInActivity := true
+		params := makeParams(true)
+		count, err := streamOnce(params)
+		if err != nil && includeSignInActivity && count == 0 && isGraphAuthorizationDenied(err) {
+			log.Info("warning: authorization denied when requesting signInActivity for users (missing AuditLog.Read.All API permission); retrying without signInActivity")
+			includeSignInActivity = false
+			params = makeParams(false)
+			count, err = streamOnce(params)
+		}
+		if err != nil {
+			log.Error(err, "unable to continue processing users")
+			return
 		}
 		log.Info("finished listing all users", "count", count)
 	}()
 
 	return out
+}
+
+func isGraphAuthorizationDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	msgLower := strings.ToLower(msg)
+	return strings.Contains(msg, "Authentication_MSGraphPermissionMissing") && strings.Contains(msgLower, "auditlog.read.all")
 }

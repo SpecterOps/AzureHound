@@ -68,3 +68,10 @@ func TestListUsers(t *testing.T) {
 		t.Error("expected channel to close from an error result but it did not")
 	}
 }
+
+func TestIsGraphAuthorizationDenied(t *testing.T) {
+	err := fmt.Errorf("map[error:map[code:Authentication_MSGraphPermissionMissing innerError:map[client-request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc date:2026-01-28T15:29:16 request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc] message:The principal does not have required Microsoft Graph permission(s): AuditLog.Read.All to call this API. For more information about Microsoft Graph permissions, please visit https://learn.microsoft.com/graph/permissions-overview.]]")
+	if !isGraphAuthorizationDenied(err) {
+		t.Errorf("expected true")
+	}
+}
