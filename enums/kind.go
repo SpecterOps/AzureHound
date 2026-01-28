@@ -23,6 +23,7 @@ const (
 	KindAZApp                             Kind = "AZApp"
 	KindAZAppMember                       Kind = "AZAppMember"
 	KindAZAppOwner                        Kind = "AZAppOwner"
+	KindAZFederatedIdentityCredential     Kind = "AZFederatedIdentityCredential"
 	KindAZDevice                          Kind = "AZDevice"
 	KindAZGroup                           Kind = "AZGroup"
 	KindAZGroupMember                     Kind = "AZGroupMember"
