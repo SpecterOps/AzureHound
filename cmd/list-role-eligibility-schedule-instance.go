@@ -19,6 +19,10 @@ package cmd
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/bloodhoundad/azurehound/v2/client"
 	"github.com/bloodhoundad/azurehound/v2/client/query"
 	"github.com/bloodhoundad/azurehound/v2/enums"
@@ -26,9 +30,6 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 	"github.com/spf13/cobra"
-	"os"
-	"os/signal"
-	"time"
 )
 
 func init() {
@@ -71,7 +72,7 @@ func listRoleEligibilityScheduleInstances(ctx context.Context, client client.Azu
 				log.Error(item.Error, "unable to continue processing unified role eligibility instance schedules")
 				return
 			} else {
-				log.V(2).Info("found unified role eligibility instance schedule", "unifiedRoleEligibilitySchedule", item)
+				log.V(2).Info("found unified role eligibility instance schedule", "id", item.Ok.Id)
 				count++
 				result := item.Ok
 				if ok := pipeline.SendAny(ctx.Done(), out, azureWrapper[models.RoleEligibilityScheduleInstance]{

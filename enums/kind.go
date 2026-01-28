@@ -25,7 +25,6 @@ const (
 	KindAZAppOwner                        Kind = "AZAppOwner"
 	KindAZFederatedIdentityCredential     Kind = "AZFederatedIdentityCredential"
 	KindAZDevice                          Kind = "AZDevice"
-	KindAZDeviceOwner                     Kind = "AZDeviceOwner"
 	KindAZGroup                           Kind = "AZGroup"
 	KindAZGroupMember                     Kind = "AZGroupMember"
 	KindAZGroupOwner                      Kind = "AZGroupOwner"

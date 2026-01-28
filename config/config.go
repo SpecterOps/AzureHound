@@ -72,7 +72,6 @@ const EnvPrefix string = "AZUREHOUND"
 var AzRegions = []string{
 	constants.China,
 	constants.Cloud,
-	constants.Germany,
 	constants.USGovL4,
 	constants.USGovL5,
 }
@@ -355,6 +354,14 @@ var (
 		Default:    "",
 	}
 
+	UserAgent = Config{
+		Name:       "user-agent",
+		Shorthand:  "U",
+		Usage:      "Custom User-Agent header",
+		Persistent: true,
+		Default:    "",
+	}
+
 	GlobalConfig = []Config{
 		ConfigFile,
 		VerbosityLevel,
@@ -364,6 +371,7 @@ var (
 		Proxy,
 		RefreshToken,
 		Pprof,
+		UserAgent,
 	}
 
 	AzureConfig = []Config{
