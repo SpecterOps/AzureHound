@@ -87,7 +87,6 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 
 	// Enumerate Devices and DeviceOwners
 	pipeline.Tee(ctx.Done(), listDevices(ctx, client), devices, devices2)
-	deviceOwners := listDeviceOwners(ctx, client, devices2)
 
 	// Enumerate Groups, GroupOwners and GroupMembers
 	pipeline.Tee(ctx.Done(), listGroups(ctx, client), groups, groups2, groups3)
@@ -121,7 +120,6 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 		appOwners,
 		appRoleAssignments,
 		apps,
-		deviceOwners,
 		devices,
 		groupMembers,
 		groupOwners,
