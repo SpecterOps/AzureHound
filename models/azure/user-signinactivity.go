@@ -2,13 +2,15 @@ package azure
 
 import "encoding/json"
 
+type userAlias User
+
+type userUnmarshalJSON struct {
+	*userAlias
+	SignInActivity *SignInActivity `json:"signInActivity,omitempty"`
+}
+
 func (s *User) UnmarshalJSON(data []byte) error {
-	type Alias User
-	var aux struct {
-		*Alias
-		SignInActivity *SignInActivity `json:"signInActivity,omitempty"`
-	}
-	aux.Alias = (*Alias)(s)
+	aux := userUnmarshalJSON{userAlias: (*userAlias)(s)}
 
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
