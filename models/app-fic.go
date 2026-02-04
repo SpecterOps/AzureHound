@@ -30,6 +30,10 @@ func (s *AppFIC) MarshalJSON() ([]byte, error) {
 	output := make(map[string]any)
 	output["appId"] = s.AppId
 
+	if s.FIC == nil {
+		return nil, nil
+	}
+
 	if fic, err := OmitEmpty(s.FIC); err != nil {
 		return nil, err
 	} else {

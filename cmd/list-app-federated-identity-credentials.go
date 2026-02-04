@@ -83,7 +83,7 @@ func listAppFICs(ctx context.Context, client client.AzureClient, apps <-chan azu
 				)
 				for item := range client.ListAzureADAppFICs(ctx, app.Data.Id, params) {
 					if item.Error != nil {
-						log.Error(item.Error, "unable to continue processing owners for this app", "appId", app.Data.AppId)
+						log.Error(item.Error, "unable to continue processing federated identity credentials for this app", "appId", app.Data.AppId)
 					} else {
 						appFIC := models.AppFIC{
 							FIC:   item.Ok,

@@ -63,7 +63,7 @@ func (s *azureClient) ListAzureADAppOwners(ctx context.Context, objectId string,
 func (s *azureClient) ListAzureADAppFICs(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage] {
 	var (
 		out  = make(chan AzureResult[json.RawMessage])
-		path = fmt.Sprintf("/%s/applications/%s/federatedIdentityCredentials/", constants.GraphApiBetaVersion, objectId)
+		path = fmt.Sprintf("/%s/applications/%s/federatedIdentityCredentials", constants.GraphApiBetaVersion, objectId)
 	)
 
 	if params.Top == 0 {
