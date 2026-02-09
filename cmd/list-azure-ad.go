@@ -84,7 +84,7 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 	apps := pipeline.ToAny(ctx.Done(), appChans[0])
 	appOwners := pipeline.ToAny(ctx.Done(), listAppOwners(ctx, client, appChans[1]))
 
-	// Enumerate Devices and DeviceOwners
+	// Enumerate Devices
 	pipeline.Tee(ctx.Done(), listDevices(ctx, client), devices)
 
 	// Enumerate Groups, GroupOwners and GroupMembers
