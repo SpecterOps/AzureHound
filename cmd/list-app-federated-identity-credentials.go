@@ -39,7 +39,7 @@ func init() {
 }
 
 var listAppFICCmd = &cobra.Command{
-	Use:          "apps",
+	Use:          "appfics",
 	Long:         "Lists Entra ID Application Federated Identity Credentials",
 	Run:          listAppFICsCmdImpl,
 	SilenceUsage: true,
