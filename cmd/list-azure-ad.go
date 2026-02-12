@@ -63,8 +63,7 @@ func listAzureADCmdImpl(cmd *cobra.Command, args []string) {
 
 func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{} {
 	var (
-		devices  = make(chan interface{})
-		devices2 = make(chan interface{})
+		devices = make(chan interface{})
 
 		groups  = make(chan interface{})
 		groups2 = make(chan interface{})
@@ -86,8 +85,8 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 	appOwners := pipeline.ToAny(ctx.Done(), listAppOwners(ctx, client, appChans[1]))
 	appFICs := pipeline.ToAny(ctx.Done(), listAppFICs(ctx, client, appChans[2]))
 
-	// Enumerate Devices and DeviceOwners
-	pipeline.Tee(ctx.Done(), listDevices(ctx, client), devices, devices2)
+	// Enumerate Devices
+	pipeline.Tee(ctx.Done(), listDevices(ctx, client), devices)
 
 	// Enumerate Groups, GroupOwners and GroupMembers
 	pipeline.Tee(ctx.Done(), listGroups(ctx, client), groups, groups2, groups3)
