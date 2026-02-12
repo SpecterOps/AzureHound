@@ -430,6 +430,9 @@ type User struct {
 	// Returned only on $select.
 	SignInSessionsValidFromDateTime string `json:"signInSessionsValidFromDateTime,omitempty"`
 
+	// The signin activity for the User
+	SignInActivity SignInActivity `json:"signInActivity,omitempty"`
+
 	// The state or province in the user's address.
 	// Maximum length is 128 characters.
 	// Returned only on $select.
