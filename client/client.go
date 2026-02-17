@@ -25,11 +25,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/client/config"
 	"github.com/bloodhoundad/azurehound/v2/client/query"
 	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/bloodhoundad/azurehound/v2/models/intune"
 	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 )
@@ -174,22 +176,35 @@ type azureClient struct {
 	tenant          azure.Tenant
 }
 
+// Core AzureGraphClient interface - unchanged to preserve compatibility
 type AzureGraphClient interface {
 	GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error)
 
 	ListAzureADGroups(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Group]
 	ListAzureADGroupMembers(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
 	ListAzureADGroupOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
-	ListAzureADAppOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
-	ListAzureADApps(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Application]
+
 	ListAzureADUsers(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.User]
-	ListAzureADRoleAssignments(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleAssignment]
-	ListAzureADRoles(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Role]
-	ListAzureADServicePrincipalOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+
+	ListAzureADApps(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Application]
+	ListAzureADAppOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+
 	ListAzureADServicePrincipals(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.ServicePrincipal]
-	ListAzureDeviceRegisteredOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+	ListAzureADServicePrincipalOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+
+	ListAzureADRoles(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Role]
+	ListAzureADRoleAssignments(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleAssignment]
+
 	ListAzureDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Device]
+	ListAzureDeviceRegisteredOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
+
 	ListAzureADAppRoleAssignments(ctx context.Context, servicePrincipalId string, params query.GraphParams) <-chan AzureResult[azure.AppRoleAssignment]
+	ListAzureUnifiedRoleEligibilityScheduleInstances(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleEligibilityScheduleInstance]
+
+	ListAzureADTenants(ctx context.Context, includeAllTenantCategories bool) <-chan AzureResult[azure.Tenant]
+	GetAzureADTenants(ctx context.Context, includeAllTenantCategories bool) (azure.TenantList, error)
+
+	ListRoleAssignmentPolicies(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleManagementPolicyAssignment]
 }
 
 type AzureResourceManagerClient interface {
@@ -214,10 +229,53 @@ type AzureResourceManagerClient interface {
 	ListAzureFunctionApps(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.FunctionApp]
 }
 
-type AzureClient interface {
+// New interface for Intune-specific Graph operations
+type IntuneGraphClient interface {
+	ValidateScriptDeployment(ctx context.Context) error
+
+	ListIntuneDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.IntuneDevice]
+	ExecuteRegistryCollectionScript(ctx context.Context, deviceID string) (*azure.ScriptExecution, error)
+	GetScriptExecutionResults(ctx context.Context, scriptID string) <-chan AzureResult[azure.ScriptExecutionResult]
+	WaitForScriptCompletion(ctx context.Context, scriptID string, maxWaitTime time.Duration) (*azure.RegistryData, error)
+	CollectRegistryDataFromDevice(ctx context.Context, deviceID string) (*azure.RegistryData, error)
+	CollectRegistryDataFromAllDevices(ctx context.Context) <-chan AzureResult[azure.DeviceRegistryData]
+	GetDeployedScriptID(ctx context.Context, scriptName string) (string, error)
+	TriggerScriptExecution(ctx context.Context, scriptID, deviceID string) error
+
+	// Add Intune methods
+	ListIntuneManagedDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[intune.ManagedDevice]
+	GetIntuneDeviceCompliance(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ComplianceState]
+	GetIntuneDeviceConfiguration(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ConfigurationState]
+}
+
+// Composed interface that includes both core and Intune functionality
+type ExtendedAzureGraphClient interface {
 	AzureGraphClient
-	AzureResourceManagerClient
-	AzureRoleManagementClient
+	IntuneGraphClient
+}
+
+// Core AzureClient interface - unchanged to preserve compatibility
+type AzureClient interface {
+	ExtendedAzureGraphClient
+
+	ListAzureSubscriptions(ctx context.Context) <-chan AzureResult[azure.Subscription]
+	ListAzureResourceGroups(ctx context.Context, subscriptionId string, params query.RMParams) <-chan AzureResult[azure.ResourceGroup]
+	ListAzureVirtualMachines(ctx context.Context, subscriptionId string, params query.RMParams) <-chan AzureResult[azure.VirtualMachine]
+	ListAzureVMScaleSets(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.VMScaleSet]
+	ListAzureKeyVaults(ctx context.Context, subscriptionId string, params query.RMParams) <-chan AzureResult[azure.KeyVault]
+	ListAzureStorageAccounts(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.StorageAccount]
+	ListAzureStorageContainers(ctx context.Context, subscriptionId, resourceGroupName, saName, filter, includeDeleted, maxPageSize string) <-chan AzureResult[azure.StorageContainer]
+	ListAzureContainerRegistries(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.ContainerRegistry]
+	ListAzureWebApps(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.WebApp]
+	ListAzureFunctionApps(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.FunctionApp]
+	ListAzureLogicApps(ctx context.Context, subscriptionId, filter string, top int32) <-chan AzureResult[azure.LogicApp]
+	ListAzureAutomationAccounts(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.AutomationAccount]
+	ListAzureManagedClusters(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.ManagedCluster]
+
+	ListAzureManagementGroups(ctx context.Context, skipToken string) <-chan AzureResult[azure.ManagementGroup]
+	ListAzureManagementGroupDescendants(ctx context.Context, groupId string, top int32) <-chan AzureResult[azure.DescendantInfo]
+
+	ListRoleAssignmentsForResource(ctx context.Context, resourceId, filter, tenantId string) <-chan AzureResult[azure.RoleAssignment]
 
 	TenantInfo() azure.Tenant
 	CloseIdleConnections()
