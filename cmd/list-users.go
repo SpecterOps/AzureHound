@@ -99,6 +99,7 @@ func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{
 					TenantId:   client.TenantInfo().TenantId,
 					TenantName: client.TenantInfo().DisplayName,
 				}
+
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZUser,
 					Data: user,
@@ -109,12 +110,10 @@ func listUsers(ctx context.Context, client client.AzureClient) <-chan interface{
 			return count, nil
 		}
 
-		includeSignInActivity := true
 		params := makeParams(true)
 		count, err := streamOnce(params)
-		if err != nil && includeSignInActivity && count == 0 && isGraphAuthorizationDenied(err) {
+		if err != nil && count == 0 && isGraphAuthorizationDenied(err) {
 			log.Info("warning: authorization denied when requesting signInActivity for users (missing AuditLog.Read.All API permission); retrying without signInActivity")
-			includeSignInActivity = false
 			params = makeParams(false)
 			count, err = streamOnce(params)
 		}
