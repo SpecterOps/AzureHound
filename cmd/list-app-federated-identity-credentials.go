@@ -95,11 +95,13 @@ func listAppFICs(ctx context.Context, client client.AzureClient, apps <-chan azu
 					}
 				}
 
-				if ok := pipeline.Send(ctx.Done(), out, NewAzureWrapper(
-					enums.KindAZFederatedIdentityCredential,
-					data,
-				)); !ok {
-					return
+                               if data.FICs != nil {
+					if ok := pipeline.Send(ctx.Done(), out, NewAzureWrapper(
+						enums.KindAZFederatedIdentityCredential,
+						data,
+					)); !ok {
+						return
+					}
 				}
 				log.V(1).Info("finished listing app fics", "appId", app.Data.AppId, "count", count)
 			}
