@@ -41,7 +41,7 @@ func TestUserUnmarshal_PopulatesLastSuccessfulSignInDateTimeFromSignInActivity(t
 		t.Fatalf("unexpected unmarshal error: %v", err)
 	}
 
-	if *u.SignInActivity.LastSuccessfulSignInDateTime != "2025-01-27T22:20:22Z" {
-		t.Fatalf("expected LastSuccessfulSignInDateTime to be populated, got %q", *u.SignInActivity.LastSuccessfulSignInDateTime)
+	if u.SignInActivity.LastSuccessfulSignInDateTime != "2025-01-27T22:20:22Z" {
+		t.Fatalf("expected LastSuccessfulSignInDateTime to be populated, got %q", u.SignInActivity.LastSuccessfulSignInDateTime)
 	}
 }
