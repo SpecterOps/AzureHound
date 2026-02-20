@@ -32,6 +32,7 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/bloodhoundad/azurehound/v2/models/intune"
 )
 
 func NewClient(config config.Config) (AzureClient, error) {
@@ -222,6 +223,12 @@ type AzureClient interface {
 
 	TenantInfo() azure.Tenant
 	CloseIdleConnections()
+
+	// Add Intune methods
+	ListIntuneManagedDevices(ctx context.Context, params query.GraphParams) <-chan AzureResult[intune.ManagedDevice]
+	GetIntuneDeviceCompliance(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ComplianceState]
+	GetIntuneDeviceConfiguration(ctx context.Context, deviceId string, params query.GraphParams) <-chan AzureResult[intune.ConfigurationState]
+	
 }
 
 func (s azureClient) TenantInfo() azure.Tenant {
