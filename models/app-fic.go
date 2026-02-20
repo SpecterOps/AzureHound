@@ -48,9 +48,10 @@ type AppFICs struct {
 }
 
 type FICData struct {
-	Audiences []string `json:"audiences"`
-	ID        string   `json:"id"`
-	Issuer    string   `json:"issuer"`
-	Name      string   `json:"name"`
-	Subject   string   `json:"subject"`
+	Audiences   []string `json:"audiences"`
+	ID          string   `json:"id"`
+	Issuer      string   `json:"issuer"`
+	Name        string   `json:"name"`
+	Subject     string   `json:"subject"`
+	Description string   `json:"description"`
 }
