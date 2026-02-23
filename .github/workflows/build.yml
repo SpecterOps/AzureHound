@@ -189,6 +189,13 @@ jobs:
           check-latest: true
           cache: true
 
+      - name: Generate Windows Resources
+        if: matrix.os == 'windows'
+        continue-on-error: true
+        run: |
+          echo "Generating Windows resources..."
+          go run cmd/generate-windows-resources/generate-windows-resources.go "v0.0.0-rolling+${{ github.sha }}" || echo "Failed to generate Windows Resources. Skipping..."
+
       - name: Build
         run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=v0.0.0-rolling+${{ github.sha }}"'
         env:
