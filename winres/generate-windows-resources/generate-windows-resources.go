@@ -95,7 +95,7 @@ func buildWinresConfig(productVersion string) map[string]interface{} {
 						langCodeUSEn: map[string]string{
 							"FileDescription":  constants.Description,
 							"ProductName":      constants.DisplayName,
-							"CompanyName":      constants.AuthorRef,
+							"CompanyName":      constants.Company,
 							"LegalCopyright":   fmt.Sprintf("Copyright (C) %d %s", time.Now().Year(), constants.Company),
 							"ProductVersion":   productVersion,
 							"FileVersion":      fileVersion,
