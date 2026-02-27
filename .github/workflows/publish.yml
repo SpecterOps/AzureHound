@@ -37,7 +37,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Generating Windows resources..."
-          go run cmd/generate-windows-resources/generate-windows-resources.go "${{ env.AZUREHOUND_VERSION }}"
+          go run winres/generate-windows-resources/generate-windows-resources.go "${{ env.AZUREHOUND_VERSION }}"
 
       - name: Build
         run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=${{ env.AZUREHOUND_VERSION }}"'
