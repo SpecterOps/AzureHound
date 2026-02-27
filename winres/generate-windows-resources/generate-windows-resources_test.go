@@ -149,7 +149,7 @@ func TestBuildWinresConfig(t *testing.T) {
 	requiredFields := map[string]string{
 		"FileDescription":  constants.Description,
 		"ProductName":      constants.DisplayName,
-		"CompanyName":      constants.AuthorRef,
+		"CompanyName":      constants.Company,
 		"ProductVersion":   productVersion,
 		"FileVersion":      fileVersion,
 		"OriginalFilename": "azurehound.exe",
