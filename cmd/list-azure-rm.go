@@ -99,11 +99,13 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		mgmtGroups3               = make(chan interface{})
 		mgmtGroupRoleAssignments1 = make(chan azureWrapper[models.ManagementGroupRoleAssignments])
 		mgmtGroupRoleAssignments2 = make(chan azureWrapper[models.ManagementGroupRoleAssignments])
+		mgmtGroupRoleAssignments3 = make(chan azureWrapper[models.ManagementGroupRoleAssignments])
 
 		resourceGroups                = make(chan interface{})
 		resourceGroups2               = make(chan interface{})
 		resourceGroupRoleAssignments1 = make(chan azureWrapper[models.ResourceGroupRoleAssignments])
 		resourceGroupRoleAssignments2 = make(chan azureWrapper[models.ResourceGroupRoleAssignments])
+		resourceGroupRoleAssignments3 = make(chan azureWrapper[models.ResourceGroupRoleAssignments])
 
 		subscriptions                = make(chan interface{})
 		subscriptions2               = make(chan interface{})
@@ -119,6 +121,7 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		subscriptions12              = make(chan interface{})
 		subscriptionRoleAssignments1 = make(chan interface{})
 		subscriptionRoleAssignments2 = make(chan interface{})
+		subscriptionRoleAssignments3 = make(chan interface{})
 
 		virtualMachines                = make(chan interface{})
 		virtualMachines2               = make(chan interface{})
@@ -157,21 +160,24 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 	pipeline.Tee(ctx.Done(), listVMScaleSets(ctx, client, subscriptions12), vmScaleSets, vmScaleSets2)
 
 	// Enumerate Relationships
-	// ManagementGroups: Descendants, Owners and UserAccessAdmins
+	// ManagementGroups: Descendants, Owners, Contributors and UserAccessAdmins
 	mgmtGroupDescendants := listManagementGroupDescendants(ctx, client, mgmtGroups2)
-	pipeline.Tee(ctx.Done(), listManagementGroupRoleAssignments(ctx, client, mgmtGroups3), mgmtGroupRoleAssignments1, mgmtGroupRoleAssignments2)
+	pipeline.Tee(ctx.Done(), listManagementGroupRoleAssignments(ctx, client, mgmtGroups3), mgmtGroupRoleAssignments1, mgmtGroupRoleAssignments2, mgmtGroupRoleAssignments3)
 	mgmtGroupOwners := listManagementGroupOwners(ctx, mgmtGroupRoleAssignments1)
-	mgmtGroupUserAccessAdmins := listManagementGroupUserAccessAdmins(ctx, mgmtGroupRoleAssignments2)
+	mgmtGroupContributors := listManagementGroupContributors(ctx, mgmtGroupRoleAssignments2)
+	mgmtGroupUserAccessAdmins := listManagementGroupUserAccessAdmins(ctx, mgmtGroupRoleAssignments3)
 
-	// Subscriptions: Owners and UserAccessAdmins
-	pipeline.Tee(ctx.Done(), listSubscriptionRoleAssignments(ctx, client, subscriptions5), subscriptionRoleAssignments1, subscriptionRoleAssignments2)
+	// Subscriptions: Owners, Contributors and UserAccessAdmins
+	pipeline.Tee(ctx.Done(), listSubscriptionRoleAssignments(ctx, client, subscriptions5), subscriptionRoleAssignments1, subscriptionRoleAssignments2, subscriptionRoleAssignments3)
 	subscriptionOwners := listSubscriptionOwners(ctx, client, subscriptionRoleAssignments1)
-	subscriptionUserAccessAdmins := listSubscriptionUserAccessAdmins(ctx, client, subscriptionRoleAssignments2)
+	subscriptionContributors := listSubscriptionContributors(ctx, client, subscriptionRoleAssignments2)
+	subscriptionUserAccessAdmins := listSubscriptionUserAccessAdmins(ctx, client, subscriptionRoleAssignments3)
 
-	// ResourceGroups: Owners and UserAccessAdmins
-	pipeline.Tee(ctx.Done(), listResourceGroupRoleAssignments(ctx, client, resourceGroups2), resourceGroupRoleAssignments1, resourceGroupRoleAssignments2)
+	// ResourceGroups: Owners, Contributors and UserAccessAdmins
+	pipeline.Tee(ctx.Done(), listResourceGroupRoleAssignments(ctx, client, resourceGroups2), resourceGroupRoleAssignments1, resourceGroupRoleAssignments2, resourceGroupRoleAssignments3)
 	resourceGroupOwners := listResourceGroupOwners(ctx, resourceGroupRoleAssignments1)
-	resourceGroupUserAccessAdmins := listResourceGroupUserAccessAdmins(ctx, resourceGroupRoleAssignments2)
+	resourceGroupContributors := listResourceGroupContributors(ctx, resourceGroupRoleAssignments2)
+	resourceGroupUserAccessAdmins := listResourceGroupUserAccessAdmins(ctx, resourceGroupRoleAssignments3)
 
 	// KeyVaults: AccessPolicies, Owners, UserAccessAdmins, Contributors and KVContributors
 	pipeline.Tee(ctx.Done(), listKeyVaultRoleAssignments(ctx, client, keyVaults2), keyVaultRoleAssignments1, keyVaultRoleAssignments2, keyVaultRoleAssignments3, keyVaultRoleAssignments4)
@@ -227,13 +233,16 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		logicAppRoleAssignments,
 		managedClusters,
 		managedClusterRoleAssignments,
+		mgmtGroupContributors,
 		mgmtGroupDescendants,
 		mgmtGroupOwners,
 		mgmtGroupUserAccessAdmins,
 		mgmtGroups,
+		resourceGroupContributors,
 		resourceGroupOwners,
 		resourceGroupUserAccessAdmins,
 		resourceGroups,
+		subscriptionContributors,
 		subscriptionOwners,
 		subscriptionUserAccessAdmins,
 		subscriptions,
