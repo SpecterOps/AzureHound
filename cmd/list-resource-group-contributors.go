@@ -33,49 +33,52 @@ import (
 )
 
 func init() {
-	listRootCmd.AddCommand(listResourceGroupUserAccessAdminsCmd)
+	listRootCmd.AddCommand(listResourceGroupContributorsCmd)
 }
 
-var listResourceGroupUserAccessAdminsCmd = &cobra.Command{
-	Use:          "resource-group-user-access-admins",
-	Long:         "Lists Azure Resource Group User Access Admins",
-	Run:          listResourceGroupUserAccessAdminsCmdImpl,
+var listResourceGroupContributorsCmd = &cobra.Command{
+	Use:          "resource-group-contributors",
+	Long:         "Lists Azure Resource Group Contributors",
+	Run:          listResourceGroupContributorsCmdImpl,
 	SilenceUsage: true,
 }
 
-func listResourceGroupUserAccessAdminsCmdImpl(cmd *cobra.Command, args []string) {
+func listResourceGroupContributorsCmdImpl(cmd *cobra.Command, args []string) {
 	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, os.Kill)
 	defer gracefulShutdown(stop)
 
 	log.V(1).Info("testing connections")
 	azClient := connectAndCreateClient()
-	log.Info("collecting azure resource group user access admins...")
+	log.Info("collecting azure resource group contributors...")
 	start := time.Now()
 	subscriptions := listSubscriptions(ctx, azClient)
 	resourceGroups := listResourceGroups(ctx, azClient, subscriptions)
 	roleAssignments := listResourceGroupRoleAssignments(ctx, azClient, resourceGroups)
 	panicrecovery.HandleBubbledPanic(ctx, stop, log)
-	stream := listResourceGroupUserAccessAdmins(ctx, roleAssignments)
+	stream := listResourceGroupContributors(ctx, roleAssignments)
 	outputStream(ctx, stream)
 	duration := time.Since(start)
 	log.Info("collection completed", "duration", duration.String())
 }
 
-func listResourceGroupUserAccessAdmins(
+func listResourceGroupContributors(
 	ctx context.Context,
 	roleAssignments <-chan azureWrapper[models.ResourceGroupRoleAssignments],
 ) <-chan any {
 	return pipeline.Map(ctx.Done(), roleAssignments, func(ra azureWrapper[models.ResourceGroupRoleAssignments]) any {
-		filteredAssignments := internal.Filter(ra.Data.RoleAssignments, rgRoleAssignmentFilter(constants.UserAccessAdminRoleID))
-		uaas := internal.Map(filteredAssignments, func(ra models.ResourceGroupRoleAssignment) models.ResourceGroupUserAccessAdmin {
-			return models.ResourceGroupUserAccessAdmin{
-				UserAccessAdmin: ra.RoleAssignment,
+		filteredAssignments := internal.Filter(ra.Data.RoleAssignments, rgRoleAssignmentFilter(constants.ContributorRoleID))
+
+		contributors := internal.Map(filteredAssignments, func(ra models.ResourceGroupRoleAssignment) models.ResourceGroupContributor {
+			return models.ResourceGroupContributor{
+				Contributor:     ra.RoleAssignment,
 				ResourceGroupId: ra.ResourceGroupId,
 			}
 		})
-		return NewAzureWrapper(enums.KindAZResourceGroupUserAccessAdmin, models.ResourceGroupUserAccessAdmins{
-			ResourceGroupId:  ra.Data.ResourceGroupId,
-			UserAccessAdmins: uaas,
+
+		return NewAzureWrapper(enums.KindAZResourceGroupContributor, models.ResourceGroupContributors{
+			ResourceGroupId: ra.Data.ResourceGroupId,
+			Contributors:    contributors,
 		})
 	})
 }
+
