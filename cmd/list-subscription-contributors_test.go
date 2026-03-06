@@ -77,3 +77,59 @@ func TestListSubscriptionContributors(t *testing.T) {
 	}
 }
 
+func TestListSubscriptionContributors_Filters(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	ctx := context.Background()
+
+	mockClient := mocks.NewMockAzureClient(ctrl)
+
+	mockRoleAssignmentsChannel := make(chan interface{})
+	mockTenant := azure.Tenant{}
+	mockClient.EXPECT().TenantInfo().Return(mockTenant).AnyTimes()
+	channel := listSubscriptionContributors(ctx, mockClient, mockRoleAssignmentsChannel)
+
+	go func() {
+		defer close(mockRoleAssignmentsChannel)
+
+		// Send role assignments with Owner and UserAccessAdmin roles — neither should pass the Contributor filter
+		mockRoleAssignmentsChannel <- AzureWrapper{
+			Data: models.SubscriptionRoleAssignments{
+				SubscriptionId: "foo",
+				RoleAssignments: []models.SubscriptionRoleAssignment{
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: constants.OwnerRoleID,
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: constants.UserAccessAdminRoleID,
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.UserAccessAdminRoleID,
+							},
+						},
+					},
+				},
+			},
+		}
+	}()
+
+	if result, ok := <-channel; !ok {
+		t.Fatalf("failed to receive from channel")
+	} else if wrapper, ok := result.(AzureWrapper); !ok {
+		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
+	} else if data, ok := wrapper.Data.(models.SubscriptionContributors); !ok {
+		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionContributors{})
+	} else if len(data.Contributors) != 0 {
+		t.Errorf("got %v contributors, want 0", len(data.Contributors))
+	}
+
+	if _, ok := <-channel; ok {
+		t.Error("should not have recieved from channel")
+	}
+}
+
