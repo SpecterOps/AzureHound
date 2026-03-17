@@ -55,9 +55,17 @@ func TestListResourceGroupUserAccessAdmins(t *testing.T) {
 				RoleAssignments: []models.ResourceGroupRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.UserAccessAdminRoleID,
+							Name: "uaa-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.UserAccessAdminRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "owner-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
 							},
 						},
 					},
@@ -66,11 +74,29 @@ func TestListResourceGroupUserAccessAdmins(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
 	}
 
+	wrapper, ok := result.(azureWrapper[models.ResourceGroupUserAccessAdmins])
+	if !ok {
+		t.Fatalf("unexpected type in channel: %T", result)
+	}
+
+	if wrapper.Data.ResourceGroupId != "foo" {
+		t.Errorf("expected ResourceGroupId 'foo', got '%s'", wrapper.Data.ResourceGroupId)
+	}
+
+	if len(wrapper.Data.UserAccessAdmins) != 1 {
+		t.Fatalf("expected 1 user access admin, got %d", len(wrapper.Data.UserAccessAdmins))
+	}
+
+	if wrapper.Data.UserAccessAdmins[0].UserAccessAdmin.Name != "uaa-assignment" {
+		t.Errorf("expected user access admin name 'uaa-assignment', got '%s'", wrapper.Data.UserAccessAdmins[0].UserAccessAdmin.Name)
+	}
+
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
