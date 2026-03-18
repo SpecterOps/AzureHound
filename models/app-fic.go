@@ -43,8 +43,10 @@ func (s *AppFIC) MarshalJSON() ([]byte, error) {
 }
 
 type AppFICs struct {
-	FICs  []AppFIC `json:"fics"`
-	AppId string   `json:"appId"`
+	FICs       []AppFIC `json:"fics"`
+	AppId      string   `json:"appId"`
+	TenantId   string   `json:"tenantId"`
+	TenantName string   `json:"tenantName"`
 }
 
 type FICData struct {

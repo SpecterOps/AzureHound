@@ -77,7 +77,9 @@ func listAppFICs(ctx context.Context, client client.AzureClient, apps <-chan azu
 			for app := range stream {
 				var (
 					data = models.AppFICs{
-						AppId: app.Data.AppId,
+						AppId:      app.Data.AppId,
+						TenantId:   client.TenantInfo().TenantId,
+						TenantName: client.TenantInfo().DisplayName,
 					}
 					count = 0
 				)
