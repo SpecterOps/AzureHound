@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
@@ -77,15 +78,20 @@ func TestListAppOwners(t *testing.T) {
 		}
 	}()
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if len(result.Data.Owners) != 2 {
-		t.Errorf("got %v, want %v", len(result.Data.Owners), 2)
+	// Collect both results before asserting. listAppOwners fans out across goroutines
+	// via pipeline.Demux, so output order is non-deterministic. Asserting positionally
+	// produces a flaky test; instead we assert on the set of owner counts.
+	var ownerCounts []int
+	for i := 0; i < 2; i++ {
+		result, ok := <-channel
+		if !ok {
+			t.Fatalf("failed to receive result %d from channel", i+1)
+		}
+		ownerCounts = append(ownerCounts, len(result.Data.Owners))
 	}
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if len(result.Data.Owners) != 1 {
-		t.Errorf("got %v, want %v", len(result.Data.Owners), 2)
+	sort.Ints(ownerCounts)
+	if ownerCounts[0] != 1 || ownerCounts[1] != 2 {
+		t.Errorf("expected owner counts [1 2] (in any order), got %v", ownerCounts)
 	}
 }

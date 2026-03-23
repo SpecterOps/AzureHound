@@ -20,6 +20,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
@@ -92,15 +93,20 @@ func TestListManagementGroupRoleAssignments(t *testing.T) {
 		}
 	}()
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if len(result.Data.RoleAssignments) != 2 {
-		t.Errorf("got %v, want %v", len(result.Data.RoleAssignments), 2)
+	// Collect both results before asserting. listManagementGroupRoleAssignments fans out
+	// across goroutines via pipeline.Demux, so output order is non-deterministic.
+	// Asserting positionally produces a flaky test; instead we assert on the set of counts.
+	var roleCounts []int
+	for i := 0; i < 2; i++ {
+		result, ok := <-channel
+		if !ok {
+			t.Fatalf("failed to receive result %d from channel", i+1)
+		}
+		roleCounts = append(roleCounts, len(result.Data.RoleAssignments))
 	}
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if len(result.Data.RoleAssignments) != 1 {
-		t.Errorf("got %v, want %v", len(result.Data.RoleAssignments), 2)
+	sort.Ints(roleCounts)
+	if roleCounts[0] != 1 || roleCounts[1] != 2 {
+		t.Errorf("expected role assignment counts [1 2] (in any order), got %v", roleCounts)
 	}
 }
