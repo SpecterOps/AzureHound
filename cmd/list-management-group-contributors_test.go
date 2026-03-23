@@ -66,12 +66,30 @@ func TestListManagementGroupContributors(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	if result, ok := <-channel; !ok {
 		t.Fatalf("failed to receive from channel")
+	} else if wrapper, ok := result.(azureWrapper[models.ManagementGroupContributors]); !ok {
+		t.Errorf("failed type assertion: got %T, want azureWrapper[models.ManagementGroupContributors]", result)
+	} else {
+		if wrapper.Data.ManagementGroupId != "foo" {
+			t.Errorf("got ManagementGroupId %q, want %q", wrapper.Data.ManagementGroupId, "foo")
+		}
+		if len(wrapper.Data.Contributors) != 1 {
+			t.Fatalf("got %v contributors, want 1", len(wrapper.Data.Contributors))
+		}
+		if wrapper.Data.Contributors[0].Contributor.Name != constants.ContributorRoleID {
+			t.Errorf("got Contributor.Name %q, want %q", wrapper.Data.Contributors[0].Contributor.Name, constants.ContributorRoleID)
+		}
+		if wrapper.Data.Contributors[0].Contributor.Properties.RoleDefinitionId != constants.ContributorRoleID {
+			t.Errorf("got RoleDefinitionId %q, want %q", wrapper.Data.Contributors[0].Contributor.Properties.RoleDefinitionId, constants.ContributorRoleID)
+		}
+		if wrapper.Data.Contributors[0].ManagementGroupId != "" {
+			t.Errorf("got contributor ManagementGroupId %q, want %q", wrapper.Data.Contributors[0].ManagementGroupId, "")
+		}
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
 
@@ -126,7 +144,7 @@ func TestListManagementGroupContributors_Filters(t *testing.T) {
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
 

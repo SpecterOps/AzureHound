@@ -68,12 +68,25 @@ func TestListSubscriptionContributors(t *testing.T) {
 		t.Fatalf("failed to receive from channel")
 	} else if wrapper, ok := result.(AzureWrapper); !ok {
 		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
-	} else if _, ok := wrapper.Data.(models.SubscriptionContributors); !ok {
+	} else if data, ok := wrapper.Data.(models.SubscriptionContributors); !ok {
 		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionContributors{})
+	} else {
+		if data.SubscriptionId != "foo" {
+			t.Errorf("got SubscriptionId %q, want %q", data.SubscriptionId, "foo")
+		}
+		if len(data.Contributors) != 1 {
+			t.Fatalf("got %v contributors, want 1", len(data.Contributors))
+		}
+		if data.Contributors[0].Contributor.Name != constants.ContributorRoleID {
+			t.Errorf("got Contributor.Name %q, want %q", data.Contributors[0].Contributor.Name, constants.ContributorRoleID)
+		}
+		if data.Contributors[0].Contributor.Properties.RoleDefinitionId != constants.ContributorRoleID {
+			t.Errorf("got RoleDefinitionId %q, want %q", data.Contributors[0].Contributor.Properties.RoleDefinitionId, constants.ContributorRoleID)
+		}
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
 
@@ -129,7 +142,7 @@ func TestListSubscriptionContributors_Filters(t *testing.T) {
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
 
