@@ -66,7 +66,7 @@ func listResourceGroupUserAccessAdmins(
 	roleAssignments <-chan azureWrapper[models.ResourceGroupRoleAssignments],
 ) <-chan any {
 	return pipeline.Map(ctx.Done(), roleAssignments, func(ra azureWrapper[models.ResourceGroupRoleAssignments]) any {
-		filteredAssignments := internal.Filter(ra.Data.RoleAssignments, rgRoleAssignmentFilter(constants.OwnerRoleID))
+		filteredAssignments := internal.Filter(ra.Data.RoleAssignments, rgRoleAssignmentFilter(constants.UserAccessAdminRoleID))
 		uaas := internal.Map(filteredAssignments, func(ra models.ResourceGroupRoleAssignment) models.ResourceGroupUserAccessAdmin {
 			return models.ResourceGroupUserAccessAdmin{
 				UserAccessAdmin: ra.RoleAssignment,
