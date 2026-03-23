@@ -81,8 +81,6 @@ func TestListGroupMembers(t *testing.T) {
 		}
 	}()
 
-	// Collect both results before asserting. Asserting positionally
-	// produces flaky test results; instead we assert on the set of member counts.
 	var memberCounts []int
 	for i := 0; i < 2; i++ {
 		result, ok := <-channel

@@ -93,9 +93,6 @@ func TestListSubscriptionRoleAssignments(t *testing.T) {
 		}
 	}()
 
-	// Collect both results before asserting. listSubscriptionRoleAssignments fans out
-	// across goroutines via pipeline.Demux, so output order is non-deterministic.
-	// Asserting positionally produces a flaky test; instead we assert on the set of counts.
 	var roleCounts []int
 	for i := 0; i < 2; i++ {
 		result, ok := <-channel

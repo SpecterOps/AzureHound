@@ -78,9 +78,6 @@ func TestListAppOwners(t *testing.T) {
 		}
 	}()
 
-	// Collect both results before asserting. listAppOwners fans out across goroutines
-	// via pipeline.Demux, so output order is non-deterministic. Asserting positionally
-	// produces a flaky test; instead we assert on the set of owner counts.
 	var ownerCounts []int
 	for i := 0; i < 2; i++ {
 		result, ok := <-channel
