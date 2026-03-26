@@ -55,9 +55,17 @@ func TestListVirtualMachineContributors(t *testing.T) {
 				RoleAssignments: []models.VirtualMachineRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.ContributorRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.ContributorRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
 							},
 						},
 					},
@@ -66,11 +74,29 @@ func TestListVirtualMachineContributors(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
 	}
 
+	wrapper, ok := result.(azureWrapper[models.VirtualMachineContributors])
+	if !ok {
+		t.Fatalf("unexpected type in channel: %T", result)
+	}
+
+	if wrapper.Data.VirtualMachineId != "foo" {
+		t.Errorf("expected VirtualMachineId 'foo', got '%s'", wrapper.Data.VirtualMachineId)
+	}
+
+	if len(wrapper.Data.Contributors) != 1 {
+		t.Fatalf("expected 1 contributor, got %d", len(wrapper.Data.Contributors))
+	}
+
+	if wrapper.Data.Contributors[0].Contributor.Name != "matching-assignment" {
+		t.Errorf("expected contributor name 'matching-assignment', got '%s'", wrapper.Data.Contributors[0].Contributor.Name)
+	}
+
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }

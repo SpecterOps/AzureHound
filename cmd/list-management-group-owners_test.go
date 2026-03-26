@@ -55,9 +55,17 @@ func TestListManagementGroupOwners(t *testing.T) {
 				RoleAssignments: []models.ManagementGroupRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.OwnerRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.OwnerRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.ContributorRoleID,
 							},
 						},
 					},
@@ -66,11 +74,29 @@ func TestListManagementGroupOwners(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
 	}
 
+	wrapper, ok := result.(azureWrapper[models.ManagementGroupOwners])
+	if !ok {
+		t.Fatalf("unexpected type in channel: %T", result)
+	}
+
+	if wrapper.Data.ManagementGroupId != "foo" {
+		t.Errorf("expected ManagementGroupId 'foo', got '%s'", wrapper.Data.ManagementGroupId)
+	}
+
+	if len(wrapper.Data.Owners) != 1 {
+		t.Fatalf("expected 1 owner, got %d", len(wrapper.Data.Owners))
+	}
+
+	if wrapper.Data.Owners[0].Owner.Name != "matching-assignment" {
+		t.Errorf("expected owner name 'matching-assignment', got '%s'", wrapper.Data.Owners[0].Owner.Name)
+	}
+
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
