@@ -53,9 +53,17 @@ func TestListSubscriptionOwners(t *testing.T) {
 				RoleAssignments: []models.SubscriptionRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.OwnerRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.OwnerRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.ContributorRoleID,
 							},
 						},
 					},
@@ -64,15 +72,34 @@ func TestListSubscriptionOwners(t *testing.T) {
 		}
 	}()
 
-	if result, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
-	} else if wrapper, ok := result.(AzureWrapper); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
-	} else if _, ok := wrapper.Data.(models.SubscriptionOwners); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionOwners{})
+	}
+
+	wrapper, ok := result.(AzureWrapper)
+	if !ok {
+		t.Fatalf("failed type assertion: got %T, want %T", result, AzureWrapper{})
+	}
+
+	data, ok := wrapper.Data.(models.SubscriptionOwners)
+	if !ok {
+		t.Fatalf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionOwners{})
+	}
+
+	if data.SubscriptionId != "foo" {
+		t.Errorf("expected SubscriptionId 'foo', got '%s'", data.SubscriptionId)
+	}
+
+	if len(data.Owners) != 1 {
+		t.Fatalf("expected 1 owner, got %d", len(data.Owners))
+	}
+
+	if data.Owners[0].Owner.Name != "matching-assignment" {
+		t.Errorf("expected owner name 'matching-assignment', got '%s'", data.Owners[0].Owner.Name)
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }

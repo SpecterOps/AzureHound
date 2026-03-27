@@ -55,9 +55,17 @@ func TestListKeyVaultKVContributors(t *testing.T) {
 				RoleAssignments: []models.KeyVaultRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.KeyVaultContributorRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.KeyVaultContributorRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
 							},
 						},
 					},
@@ -66,11 +74,29 @@ func TestListKeyVaultKVContributors(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
 	}
 
+	wrapper, ok := result.(azureWrapper[models.KeyVaultKVContributors])
+	if !ok {
+		t.Fatalf("unexpected type in channel: %T", result)
+	}
+
+	if wrapper.Data.KeyVaultId != "foo" {
+		t.Errorf("expected KeyVaultId 'foo', got '%s'", wrapper.Data.KeyVaultId)
+	}
+
+	if len(wrapper.Data.KVContributors) != 1 {
+		t.Fatalf("expected 1 kv contributor, got %d", len(wrapper.Data.KVContributors))
+	}
+
+	if wrapper.Data.KVContributors[0].KVContributor.Name != "matching-assignment" {
+		t.Errorf("expected kv contributor name 'matching-assignment', got '%s'", wrapper.Data.KVContributors[0].KVContributor.Name)
+	}
+
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }
