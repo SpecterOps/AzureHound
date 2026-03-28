@@ -133,5 +133,24 @@ func isGraphAuthorizationDenied(err error) bool {
 	}
 	msg := err.Error()
 	msgLower := strings.ToLower(msg)
-	return strings.Contains(msg, "Authentication_MSGraphPermissionMissing") && strings.Contains(msgLower, "auditlog.read.all")
+
+	// Standard Graph permission missing error (Application permissions via proper app registration)
+	if strings.Contains(msg, "Authentication_MSGraphPermissionMissing") && strings.Contains(msgLower, "auditlog.read.all") {
+		return true
+	}
+
+	// Office client delegated permission error: when using FOCI tokens (e.g. Office client_id),
+	// signInActivity returns HTTP 403 with code "UnknownError" instead of the standard
+	// Authentication_MSGraphPermissionMissing, so the original check never matched.
+	if strings.Contains(msg, "UnknownError") && strings.Contains(msgLower, "does not have authorization") {
+		return true
+	}
+
+	// Role-based access error: returned when the principal's role does not support
+	// reading signInActivity (e.g. non-privileged roles lacking AuditLog.Read.All).
+	if strings.Contains(msg, "Authentication_RequestFromUnsupportedUserRole") {
+		return true
+	}
+
+	return false
 }
