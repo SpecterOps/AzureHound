@@ -195,6 +195,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-          provenance: false
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
