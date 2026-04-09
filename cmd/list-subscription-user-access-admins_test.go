@@ -53,9 +53,17 @@ func TestListSubscriptionUserAccessAdmins(t *testing.T) {
 				RoleAssignments: []models.SubscriptionRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.UserAccessAdminRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.UserAccessAdminRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
 							},
 						},
 					},
@@ -64,15 +72,34 @@ func TestListSubscriptionUserAccessAdmins(t *testing.T) {
 		}
 	}()
 
-	if result, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
-	} else if wrapper, ok := result.(AzureWrapper); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
-	} else if _, ok := wrapper.Data.(models.SubscriptionUserAccessAdmins); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionUserAccessAdmins{})
+	}
+
+	wrapper, ok := result.(AzureWrapper)
+	if !ok {
+		t.Fatalf("failed type assertion: got %T, want %T", result, AzureWrapper{})
+	}
+
+	data, ok := wrapper.Data.(models.SubscriptionUserAccessAdmins)
+	if !ok {
+		t.Fatalf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionUserAccessAdmins{})
+	}
+
+	if data.SubscriptionId != "foo" {
+		t.Errorf("expected SubscriptionId 'foo', got '%s'", data.SubscriptionId)
+	}
+
+	if len(data.UserAccessAdmins) != 1 {
+		t.Fatalf("expected 1 user access admin, got %d", len(data.UserAccessAdmins))
+	}
+
+	if data.UserAccessAdmins[0].UserAccessAdmin.Name != "matching-assignment" {
+		t.Errorf("expected user access admin name 'matching-assignment', got '%s'", data.UserAccessAdmins[0].UserAccessAdmin.Name)
 	}
 
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }

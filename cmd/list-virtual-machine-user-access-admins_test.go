@@ -55,9 +55,17 @@ func TestListVirtualMachineUserAccessAdmins(t *testing.T) {
 				RoleAssignments: []models.VirtualMachineRoleAssignment{
 					{
 						RoleAssignment: azure.RoleAssignment{
-							Name: constants.UserAccessAdminRoleID,
+							Name: "matching-assignment",
 							Properties: azure.RoleAssignmentPropertiesWithScope{
 								RoleDefinitionId: constants.UserAccessAdminRoleID,
+							},
+						},
+					},
+					{
+						RoleAssignment: azure.RoleAssignment{
+							Name: "non-matching-assignment",
+							Properties: azure.RoleAssignmentPropertiesWithScope{
+								RoleDefinitionId: constants.OwnerRoleID,
 							},
 						},
 					},
@@ -66,11 +74,29 @@ func TestListVirtualMachineUserAccessAdmins(t *testing.T) {
 		)
 	}()
 
-	if _, ok := <-channel; !ok {
+	result, ok := <-channel
+	if !ok {
 		t.Fatalf("failed to receive from channel")
 	}
 
+	wrapper, ok := result.(azureWrapper[models.VirtualMachineUserAccessAdmins])
+	if !ok {
+		t.Fatalf("unexpected type in channel: %T", result)
+	}
+
+	if wrapper.Data.VirtualMachineId != "foo" {
+		t.Errorf("expected VirtualMachineId 'foo', got '%s'", wrapper.Data.VirtualMachineId)
+	}
+
+	if len(wrapper.Data.UserAccessAdmins) != 1 {
+		t.Fatalf("expected 1 user access admin, got %d", len(wrapper.Data.UserAccessAdmins))
+	}
+
+	if wrapper.Data.UserAccessAdmins[0].UserAccessAdmin.Name != "matching-assignment" {
+		t.Errorf("expected user access admin name 'matching-assignment', got '%s'", wrapper.Data.UserAccessAdmins[0].UserAccessAdmin.Name)
+	}
+
 	if _, ok := <-channel; ok {
-		t.Error("should not have recieved from channel")
+		t.Error("should not have received from channel")
 	}
 }

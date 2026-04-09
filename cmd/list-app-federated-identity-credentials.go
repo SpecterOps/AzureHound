@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -36,53 +35,38 @@ import (
 )
 
 func init() {
-	listRootCmd.AddCommand(listDeviceOwnersCmd)
+	listRootCmd.AddCommand(listAppFICCmd)
 }
 
-var listDeviceOwnersCmd = &cobra.Command{
-	Use:          "device-owners",
-	Long:         "Lists Azure AD Device Owners",
-	Run:          listDeviceOwnersCmdImpl,
+var listAppFICCmd = &cobra.Command{
+	Use:          "appfics",
+	Long:         "Lists Entra ID Application Federated Identity Credentials",
+	Run:          listAppFICsCmdImpl,
 	SilenceUsage: true,
 }
 
-func listDeviceOwnersCmdImpl(cmd *cobra.Command, args []string) {
+func listAppFICsCmdImpl(cmd *cobra.Command, args []string) {
 	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, os.Kill)
 	defer gracefulShutdown(stop)
 
 	log.V(1).Info("testing connections")
 	azClient := connectAndCreateClient()
-	log.Info("collecting azure device owners...")
+	log.Info("collecting azure app federated identity credentials...")
 	start := time.Now()
-	stream := listDeviceOwners(ctx, azClient, listDevices(ctx, azClient))
+	stream := listAppFICs(ctx, azClient, listApps(ctx, azClient))
 	panicrecovery.HandleBubbledPanic(ctx, stop, log)
 	outputStream(ctx, stream)
 	duration := time.Since(start)
 	log.Info("collection completed", "duration", duration.String())
 }
 
-func listDeviceOwners(ctx context.Context, client client.AzureClient, devices <-chan interface{}) <-chan interface{} {
+func listAppFICs(ctx context.Context, client client.AzureClient, apps <-chan azureWrapper[models.App]) <-chan azureWrapper[models.AppFICs] {
 	var (
-		out     = make(chan interface{})
-		ids     = make(chan string)
-		streams = pipeline.Demux(ctx.Done(), ids, config.ColStreamCount.Value().(int))
+		out     = make(chan azureWrapper[models.AppFICs])
+		streams = pipeline.Demux(ctx.Done(), apps, config.ColStreamCount.Value().(int))
 		wg      sync.WaitGroup
+		params  = query.GraphParams{}
 	)
-
-	go func() {
-		defer panicrecovery.PanicRecovery()
-		defer close(ids)
-
-		for result := range pipeline.OrDone(ctx.Done(), devices) {
-			if device, ok := result.(AzureWrapper).Data.(models.Device); !ok {
-				log.Error(fmt.Errorf("failed type assertion"), "unable to continue enumerating device owners", "result", result)
-			} else {
-				if ok := pipeline.Send(ctx.Done(), ids, device.Id); !ok {
-					return
-				}
-			}
-		}
-	}()
 
 	wg.Add(len(streams))
 	for i := range streams {
@@ -90,33 +74,38 @@ func listDeviceOwners(ctx context.Context, client client.AzureClient, devices <-
 		go func() {
 			defer panicrecovery.PanicRecovery()
 			defer wg.Done()
-			for id := range stream {
+			for app := range stream {
 				var (
-					data = models.DeviceOwners{
-						DeviceId: id,
+					data = models.AppFICs{
+						AppId:      app.Data.AppId,
+						TenantId:   client.TenantInfo().TenantId,
+						TenantName: client.TenantInfo().DisplayName,
 					}
 					count = 0
 				)
-				for item := range client.ListAzureDeviceRegisteredOwners(ctx, id, query.GraphParams{}) {
+				for item := range client.ListAzureADAppFICs(ctx, app.Data.Id, params) {
 					if item.Error != nil {
-						log.Error(item.Error, "unable to continue processing owners for this device", "deviceId", id)
+						log.Error(item.Error, "unable to continue processing federated identity credentials for this app", "appId", app.Data.AppId)
 					} else {
-						deviceOwner := models.DeviceOwner{
-							Owner:    item.Ok,
-							DeviceId: id,
+						appFIC := models.AppFIC{
+							FIC:   item.Ok,
+							AppId: app.Data.AppId,
 						}
-						log.V(2).Info("found device owner", "deviceOwner", deviceOwner)
+						log.V(2).Info("found app FIC", "appFic", appFIC)
 						count++
-						data.Owners = append(data.Owners, deviceOwner)
+						data.FICs = append(data.FICs, appFIC)
 					}
 				}
-				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
-					Kind: enums.KindAZDeviceOwner,
-					Data: data,
-				}); !ok {
-					return
+
+				if data.FICs != nil {
+					if ok := pipeline.Send(ctx.Done(), out, NewAzureWrapper(
+						enums.KindAZFederatedIdentityCredential,
+						data,
+					)); !ok {
+						return
+					}
 				}
-				log.V(1).Info("finished listing device owners", "deviceId", id, "count", count)
+				log.V(1).Info("finished listing app fics", "appId", app.Data.AppId, "count", count)
 			}
 		}()
 	}
@@ -124,7 +113,7 @@ func listDeviceOwners(ctx context.Context, client client.AzureClient, devices <-
 	go func() {
 		wg.Wait()
 		close(out)
-		log.Info("finished listing all device owners")
+		log.Info("finished listing all app fics")
 	}()
 
 	return out

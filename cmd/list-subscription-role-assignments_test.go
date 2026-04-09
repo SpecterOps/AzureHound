@@ -20,6 +20,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/client"
@@ -92,23 +93,25 @@ func TestListSubscriptionRoleAssignments(t *testing.T) {
 		}
 	}()
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if wrapper, ok := result.(AzureWrapper); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
-	} else if data, ok := wrapper.Data.(models.SubscriptionRoleAssignments); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionRoleAssignments{})
-	} else if len(data.RoleAssignments) != 2 {
-		t.Errorf("got %v, want %v", len(data.RoleAssignments), 2)
+	var roleCounts []int
+	for i := 0; i < 2; i++ {
+		result, ok := <-channel
+		if !ok {
+			t.Fatalf("failed to receive result %d from channel", i+1)
+		}
+		wrapper, ok := result.(AzureWrapper)
+		if !ok {
+			t.Fatalf("result %d: failed type assertion: got %T, want %T", i+1, result, AzureWrapper{})
+		}
+		data, ok := wrapper.Data.(models.SubscriptionRoleAssignments)
+		if !ok {
+			t.Fatalf("result %d: failed type assertion: got %T, want %T", i+1, wrapper.Data, models.SubscriptionRoleAssignments{})
+		}
+		roleCounts = append(roleCounts, len(data.RoleAssignments))
 	}
 
-	if result, ok := <-channel; !ok {
-		t.Fatalf("failed to receive from channel")
-	} else if wrapper, ok := result.(AzureWrapper); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", result, AzureWrapper{})
-	} else if data, ok := wrapper.Data.(models.SubscriptionRoleAssignments); !ok {
-		t.Errorf("failed type assertion: got %T, want %T", wrapper.Data, models.SubscriptionRoleAssignments{})
-	} else if len(data.RoleAssignments) != 1 {
-		t.Errorf("got %v, want %v", len(data.RoleAssignments), 2)
+	sort.Ints(roleCounts)
+	if roleCounts[0] != 1 || roleCounts[1] != 2 {
+		t.Errorf("expected role assignment counts [1 2] (in any order), got %v", roleCounts)
 	}
 }

@@ -106,7 +106,7 @@ func listVirtualMachineRoleAssignments(ctx context.Context, client client.AzureC
 							VirtualMachineId: id,
 							RoleAssignment:   item.Ok,
 						}
-						log.V(2).Info("found virtual machine role assignment", "virtualMachineRoleAssignment", virtualMachineRoleAssignment)
+						log.V(2).Info("found virtual machine role assignment", "name", virtualMachineRoleAssignment.RoleAssignment.Name)
 						count++
 						virtualMachineRoleAssignments.RoleAssignments = append(virtualMachineRoleAssignments.RoleAssignments, virtualMachineRoleAssignment)
 					}

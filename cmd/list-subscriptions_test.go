@@ -39,9 +39,7 @@ func TestListSubscriptions(t *testing.T) {
 
 	mockClient := mocks.NewMockAzureClient(ctrl)
 	mockChannel := make(chan client.AzureResult[azure.Subscription])
-	mockTenant := azure.Tenant{}
 	mockError := fmt.Errorf("I'm an error")
-	mockClient.EXPECT().TenantInfo().Return(mockTenant).AnyTimes()
 	mockClient.EXPECT().ListAzureSubscriptions(gomock.Any()).Return(mockChannel)
 
 	go func() {

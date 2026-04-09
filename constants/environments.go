@@ -21,7 +21,6 @@ package constants
 const (
 	China   string = "china"
 	Cloud   string = "cloud"
-	Germany string = "germany"
 	USGovL4 string = "usgovl4"
 	USGovL5 string = "usgovl5"
 )
@@ -59,13 +58,5 @@ func AzureChina() Environment {
 		"https://login.chinacloudapi.cn",
 		"https://microsoftgraph.chinacloudapi.cn",
 		"https://management.chinacloudapi.cn",
-	}
-}
-
-func AzureGermany() Environment {
-	return Environment{
-		"https://login.microsoftonline.de",
-		"https://graph.microsoft.de",
-		"https://management.microsoftazure.de",
 	}
 }

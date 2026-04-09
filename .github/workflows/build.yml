@@ -66,8 +66,33 @@ jobs:
           tags: |
             type=edge,branch=main
             type=sha,prefix=edge-,format=short
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Container Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          build-args: VERSION=v0.0.0-rolling+${{ github.sha }}
+          tags: azurehound # temporary tag to simplify oci conversion
+          labels: ${{ steps.meta.outputs.labels }}
+          push: false
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
+          # Multi-platform builds can not be loaded into local Docker Daemon
+          outputs: type=oci,dest=/tmp/oci-image.tar
+
+      - name: Upload OCI tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: oci-image-tar
+          path: /tmp/oci-image.tar
+
+      - name: Push Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -101,6 +126,13 @@ jobs:
           go-version-file: go.mod
           check-latest: true
           cache: true
+
+      - name: Generate Windows Resources
+        if: matrix.os == 'windows'
+        continue-on-error: true
+        run: |
+          echo "Generating Windows resources..."
+          go run winres/generate-windows-resources/generate-windows-resources.go "v0.0.0-rolling+${{ github.sha }}"
 
       - name: Build
         run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=v0.0.0-rolling+${{ github.sha }}"'

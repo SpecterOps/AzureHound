@@ -92,14 +92,14 @@ func listSubscriptions(ctx context.Context, client client.AzureClient) <-chan in
 				log.Error(item.Error, "unable to continue processing subscriptions")
 				return
 			} else if !filterOnSubs || contains(uniqueSubIds, item.Ok.SubscriptionId) {
-				log.V(2).Info("found subscription", "subscription", item)
+				log.V(2).Info("found subscription", "name", item.Ok.DisplayName)
 				count++
 				// the embedded struct's values override top-level properties so TenantId
 				// needs to be explicitly set.
 				data := models.Subscription{
 					Subscription: item.Ok,
 				}
-				data.TenantId = client.TenantInfo().TenantId
+				data.TenantId = item.Ok.TenantId
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZSubscription,
 					Data: data,

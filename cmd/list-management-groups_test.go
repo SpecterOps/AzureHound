@@ -39,9 +39,7 @@ func TestListManagementGroups(t *testing.T) {
 
 	mockClient := mocks.NewMockAzureClient(ctrl)
 	mockChannel := make(chan client.AzureResult[azure.ManagementGroup])
-	mockTenant := azure.Tenant{}
 	mockError := fmt.Errorf("I'm an error")
-	mockClient.EXPECT().TenantInfo().Return(mockTenant).AnyTimes()
 	mockClient.EXPECT().ListAzureManagementGroups(gomock.Any(), gomock.Any()).Return(mockChannel)
 
 	go func() {

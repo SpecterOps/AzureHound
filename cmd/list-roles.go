@@ -70,7 +70,7 @@ func listRoles(ctx context.Context, client client.AzureClient) <-chan interface{
 				log.Error(item.Error, "unable to continue processing roles")
 				return
 			} else {
-				log.V(2).Info("found role", "role", item)
+				log.V(2).Info("found role", "displayName", item.Ok.DisplayName)
 				count++
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZRole,
