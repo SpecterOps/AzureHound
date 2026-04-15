@@ -99,7 +99,7 @@ func TestGetAzureObjectList_HungResponseTimesOut(t *testing.T) {
 		t.Fatal("getAzureObjectList did not return within expected timeout; pipeline is hung")
 	}
 
-	// Drain and ensure channel closes
+	// drain and ensure channel closes
 	for range out {
 	}
 }

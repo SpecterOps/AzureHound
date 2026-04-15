@@ -35,9 +35,7 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 )
 
-// pageRequestTimeout is the maximum duration for a single API page request,
-// including response body read. This prevents a hung connection from blocking
-// the entire collection pipeline indefinitely.
+// This prevents a hung connection from blocking the entire collection pipeline indefinitely.
 var pageRequestTimeout = 2 * time.Minute
 
 func NewClient(config config.Config) (AzureClient, error) {
@@ -125,8 +123,7 @@ func getAzureObjectList[T any](client rest.RestClient, ctx context.Context, path
 		)
 
 		// Create a per-page timeout so a single hung API response cannot block
-		// the entire collection pipeline indefinitely. The timeout covers the
-		// full request lifecycle: connection, headers, and body read.
+		// the entire collection pipeline indefinitely.
 		pageCtx, pageCancel := context.WithTimeout(ctx, pageRequestTimeout)
 
 		if nextLink != "" {
