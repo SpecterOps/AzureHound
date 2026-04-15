@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/client/config"
 	"github.com/bloodhoundad/azurehound/v2/client/query"
@@ -33,6 +34,11 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
 	"github.com/bloodhoundad/azurehound/v2/pipeline"
 )
+
+// pageRequestTimeout is the maximum duration for a single API page request,
+// including response body read. This prevents a hung connection from blocking
+// the entire collection pipeline indefinitely.
+var pageRequestTimeout = 2 * time.Minute
 
 func NewClient(config config.Config) (AzureClient, error) {
 	if msgraph, err := rest.NewRestClient(config.GraphUrl(), config); err != nil {
@@ -118,8 +124,14 @@ func getAzureObjectList[T any](client rest.RestClient, ctx context.Context, path
 			err error
 		)
 
+		// Create a per-page timeout so a single hung API response cannot block
+		// the entire collection pipeline indefinitely. The timeout covers the
+		// full request lifecycle: connection, headers, and body read.
+		pageCtx, pageCancel := context.WithTimeout(ctx, pageRequestTimeout)
+
 		if nextLink != "" {
 			if nextUrl, err := url.Parse(nextLink); err != nil {
+				pageCancel()
 				errResult.Error = err
 				_ = pipeline.Send(ctx.Done(), out, errResult)
 				return
@@ -128,18 +140,21 @@ func getAzureObjectList[T any](client rest.RestClient, ctx context.Context, path
 				if params != nil {
 					paramsMap = params.AsMap()
 				}
-				if req, err := rest.NewRequest(ctx, "GET", nextUrl, nil, paramsMap, nil); err != nil {
+				if req, err := rest.NewRequest(pageCtx, "GET", nextUrl, nil, paramsMap, nil); err != nil {
+					pageCancel()
 					errResult.Error = err
 					_ = pipeline.Send(ctx.Done(), out, errResult)
 					return
 				} else if res, err = client.Send(req); err != nil {
+					pageCancel()
 					errResult.Error = err
 					_ = pipeline.Send(ctx.Done(), out, errResult)
 					return
 				}
 			}
 		} else {
-			if res, err = client.Get(ctx, path, params, nil); err != nil {
+			if res, err = client.Get(pageCtx, path, params, nil); err != nil {
+				pageCancel()
 				errResult.Error = err
 				_ = pipeline.Send(ctx.Done(), out, errResult)
 				return
@@ -147,14 +162,18 @@ func getAzureObjectList[T any](client rest.RestClient, ctx context.Context, path
 		}
 
 		if err := rest.Decode(res.Body, &list); err != nil {
+			pageCancel()
 			errResult.Error = err
 			_ = pipeline.Send(ctx.Done(), out, errResult)
 			return
-		} else {
-			for _, u := range list.Value {
-				if ok := pipeline.Send(ctx.Done(), out, AzureResult[T]{Ok: u}); !ok {
-					return
-				}
+		}
+
+		// Page fetch complete; release the timeout context
+		pageCancel()
+
+		for _, u := range list.Value {
+			if ok := pipeline.Send(ctx.Done(), out, AzureResult[T]{Ok: u}); !ok {
+				return
 			}
 		}
 
