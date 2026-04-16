@@ -24,7 +24,7 @@ The rolling release contains pre-built binaries that are automatically kept up-t
 
 ##### Prerequisites
 
-- [Go 1.18](https://go.dev/dl/) or later
+- [Go 1.25](https://go.dev/dl/) or later
 
 To build this project from source run the following:
 
