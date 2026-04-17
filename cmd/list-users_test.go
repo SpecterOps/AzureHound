@@ -70,8 +70,47 @@ func TestListUsers(t *testing.T) {
 }
 
 func TestIsGraphAuthorizationDenied(t *testing.T) {
-	err := fmt.Errorf("map[error:map[code:Authentication_MSGraphPermissionMissing innerError:map[client-request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc date:2026-01-28T15:29:16 request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc] message:The principal does not have required Microsoft Graph permission(s): AuditLog.Read.All to call this API. For more information about Microsoft Graph permissions, please visit https://learn.microsoft.com/graph/permissions-overview.]]")
-	if !isGraphAuthorizationDenied(err) {
-		t.Errorf("expected true")
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "standard Authentication_MSGraphPermissionMissing error",
+			err:      fmt.Errorf("map[error:map[code:Authentication_MSGraphPermissionMissing innerError:map[client-request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc date:2026-01-28T15:29:16 request-id:fac52490-ea06-48f1-941e-5f5bba8e35fc] message:The principal does not have required Microsoft Graph permission(s): AuditLog.Read.All to call this API. For more information about Microsoft Graph permissions, please visit https://learn.microsoft.com/graph/permissions-overview.]]"),
+			expected: true,
+		},
+		{
+			// FOCI / Office client_id returns UnknownError instead of Authentication_MSGraphPermissionMissing
+			// when signInActivity is requested without AuditLog.Read.All application permission.
+			name:     "Office client delegated permission UnknownError",
+			err:      fmt.Errorf("map[error:map[code:UnknownError message:Microsoft Office does not have authorization to call this API.]]"),
+			expected: true,
+		},
+		{
+			// Returned when the principal's role does not support reading signInActivity.
+			name:     "unsupported user role error",
+			err:      fmt.Errorf("map[error:map[code:Authentication_RequestFromUnsupportedUserRole message:The request is not supported for the current user role.]]"),
+			expected: true,
+		},
+		{
+			name:     "unrelated error",
+			err:      fmt.Errorf("some other error"),
+			expected: false,
+		},
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := isGraphAuthorizationDenied(tc.err)
+			if got != tc.expected {
+				t.Errorf("isGraphAuthorizationDenied(%v) = %v, want %v", tc.err, got, tc.expected)
+			}
+		})
 	}
 }
