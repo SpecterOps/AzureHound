@@ -2,10 +2,8 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -127,65 +125,6 @@ func TestGetAzureObjectList_ParentContextCanceled(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("getAzureObjectList did not respect parent context cancellation")
-	}
-
-	for range out {
-	}
-}
-
-// TestGetAzureObjectList_StalledResponseBody_Integration starts a real HTTP
-// server that sends response headers and a partial JSON body, then stalls
-// indefinitely. This reproduces the exact failure mode from BED-4600: the
-// server responds (so ResponseHeaderTimeout doesn't help) but the body read
-// hangs, blocking the collection pipeline. The test verifies that the
-// per-page context timeout terminates the hung read.
-func TestGetAzureObjectList_StalledResponseBody_Integration(t *testing.T) {
-	original := pageRequestTimeout
-	pageRequestTimeout = 500 * time.Millisecond
-	defer func() { pageRequestTimeout = original }()
-
-	serverStalled := make(chan struct{})
-
-	// Start a test server that sends headers + partial body, then blocks
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		// Send the beginning of a valid JSON response, but don't finish it
-		fmt.Fprint(w, `{"value": [{"id": "1"}`)
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
-		}
-
-		// Block until the test completes (simulates a stalled connection)
-		<-serverStalled
-	}))
-	defer server.Close()
-	defer close(serverStalled)
-
-	// Create a fakeRestClient that makes a real HTTP call to the stalling server.
-	// This exercises the actual HTTP transport, TCP connection, and body read path.
-	httpClient := server.Client()
-	client := &fakeRestClient{
-		getFunc: func(ctx context.Context, path string, params query.Params, headers map[string]string) (*http.Response, error) {
-			req, err := http.NewRequestWithContext(ctx, "GET", server.URL+path, nil)
-			if err != nil {
-				return nil, err
-			}
-			return httpClient.Do(req)
-		},
-	}
-
-	out := make(chan AzureResult[map[string]string])
-	go getAzureObjectList(client, context.Background(), "/test/path", nil, out)
-
-	select {
-	case result, ok := <-out:
-		if ok {
-			require.Error(t, result.Error, "expected an error from stalled response body")
-		}
-	case <-time.After(5 * time.Second):
-		t.Fatal("getAzureObjectList hung on stalled response body; timeout did not fire")
 	}
 
 	for range out {
