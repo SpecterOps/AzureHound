@@ -1,8 +1,6 @@
 module github.com/bloodhoundad/azurehound/v2
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.2
@@ -51,8 +49,8 @@ require (
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/image v0.39.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
