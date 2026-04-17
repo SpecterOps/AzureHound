@@ -89,10 +89,9 @@ func TestGetAzureObjectList_HungResponseTimesOut(t *testing.T) {
 	// The channel should produce an error and close well within a few seconds
 	select {
 	case result, ok := <-out:
-		if ok {
-			require.Error(t, result.Error, "expected an error result from timed-out request")
-			require.ErrorIs(t, result.Error, context.DeadlineExceeded)
-		}
+		require.True(t, ok, "expected a value on out, channel closed")
+		require.Error(t, result.Error, "expected an error result from timed-out request")
+		require.ErrorIs(t, result.Error, context.DeadlineExceeded)
 	case <-time.After(5 * time.Second):
 		t.Fatal("getAzureObjectList did not return within expected timeout; pipeline is hung")
 	}
