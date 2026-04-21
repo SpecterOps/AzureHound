@@ -22,6 +22,7 @@ package rest
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -216,13 +217,38 @@ func (s *restClient) send(req *http.Request) (*http.Response, error) {
 					ExponentialBackoff(retry)
 					continue
 				} else {
-					// Not a status code that warrants a retry
-					var errRes map[string]interface{}
-					if err := Decode(res.Body, &errRes); err != nil {
+					// Not a status code that warrants a retry. Read the body once
+					// and try to decode it as a Microsoft Graph-shaped error
+					// envelope so callers can programmatically detect specific
+					// codes (e.g. Directory_ExpiredPageToken). Fall back to the
+					// original map-stringification behavior for non-Graph shapes
+					// (e.g. Resource Manager errors) so existing callers don't
+					// regress.
+					bodyBytes, readErr := io.ReadAll(res.Body)
+					res.Body.Close()
+					if readErr != nil || len(bodyBytes) == 0 {
 						return nil, fmt.Errorf("malformed error response, status code: %d", res.StatusCode)
-					} else {
-						return nil, fmt.Errorf("%v", errRes)
 					}
+
+					var graphEnvelope struct {
+						Error struct {
+							Code    string `json:"code"`
+							Message string `json:"message"`
+						} `json:"error"`
+					}
+					if err := json.Unmarshal(bodyBytes, &graphEnvelope); err == nil && graphEnvelope.Error.Code != "" {
+						return nil, &GraphError{
+							StatusCode: res.StatusCode,
+							Code:       graphEnvelope.Error.Code,
+							Message:    graphEnvelope.Error.Message,
+						}
+					}
+
+					var errRes map[string]interface{}
+					if err := json.Unmarshal(bodyBytes, &errRes); err != nil {
+						return nil, fmt.Errorf("malformed error response, status code: %d", res.StatusCode)
+					}
+					return nil, fmt.Errorf("%v", errRes)
 				}
 			} else {
 				// Response OK
