@@ -156,6 +156,7 @@ jobs:
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
 
       - name: Upload Latest Version to S3
+        if: ${{ !contains(env.AZUREHOUND_VERSION, '-') }}
         run: |
           echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azh-latest-version
 
