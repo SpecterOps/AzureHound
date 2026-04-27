@@ -153,8 +153,11 @@ jobs:
 
       - name: Upload Artifacts to S3
         run: |
-          echo "${{ env.AZUREHOUND_VERSION }}" > zipped/azh-latest-version
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
+
+      - name: Upload Latest Version to S3
+        run: |
+          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azh-latest-version
 
   containerize:
     runs-on: ubuntu-latest
