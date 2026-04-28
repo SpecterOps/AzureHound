@@ -149,7 +149,8 @@ jobs:
 
       - name: Checksum Zipped Files
         run: |
-          sha256sum zipped/${{ env.FILE_NAME }}.zip > zipped/${{ env.FILE_NAME }}.zip.sha256
+          cd zipped
+          sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Artifacts to S3
         run: |
