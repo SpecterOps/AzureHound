@@ -1,0 +1,506 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.11.1.770",
+      "templateHash": "4536988653306547200"
+    }
+  },
+  "parameters": {
+    "azureTenantId": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure tenant ID to analyze"
+      },
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "azureSecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Azure Secret"
+      }
+    },
+    "azureAppID": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure App ID"
+      }
+    },
+    "bloodhoundInstanceDomain": {
+      "type": "string",
+      "metadata": {
+        "description": "Bloodhound instance domain"
+      }
+    },
+    "bloodhoundTokenId": {
+      "type": "string",
+      "metadata": {
+        "description": "Bloodhound token ID"
+      }
+    },
+    "bloodhoundToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Bloodhound token"
+      }
+    },
+    "minReplica": {
+      "type": "int",
+      "defaultValue": 1,
+      "maxValue": 25,
+      "minValue": 0,
+      "metadata": {
+        "description": "Minimum number of replicas that will be deployed"
+      }
+    },
+    "maxReplica": {
+      "type": "int",
+      "defaultValue": 3,
+      "maxValue": 25,
+      "minValue": 0,
+      "metadata": {
+        "description": "Maximum number of replicas that will be deployed"
+      }
+    }
+  },
+  "variables": {
+    "acrLoginServer": "azurehoundregistry.azurecr.io",
+    "acrImageName": "[format('{0}/azurehound:latest', variables('acrLoginServer'))]",
+    "configcontent": "[concat('{\\\"batchsize\\\": 100,\\\"config\\\": \\\"/mnt/config/config.json\\\",\\\"instance\\\": \\\"https://', parameters('bloodhoundInstanceDomain'), '\\\",\\\"json\\\": false,\\\"managed-identity\\\": false,\\\"maxconnsperhost\\\": 20,\\\"maxidleconnsperhost\\\": 20,\\\"region\\\": \\\"cloud\\\",\\\"streamcount\\\": 25,\\\"tenant\\\": \\\"', parameters('azureTenantId'),'\\\",\\\"token\\\": \\\"', parameters('bloodhoundToken'),'\\\",\\\"tokenid\\\": \\\"', parameters('bloodhoundTokenId'),'\\\",\\\"secret\\\": \\\"', parameters('azureSecret'),'\\\",\\\"app\\\": \\\"', parameters('azureAppID'),'\\\",\\\"verbosity\\\": 2}')]",
+    "fileShareVolumeName": "config-volume",
+    "containerAppName": "[format('app-{0}', uniqueString(resourceGroup().id))]",
+    "containerAppEnvName": "[format('env-{0}', uniqueString(resourceGroup().id))]",
+    "containerAppLogAnalyticsName": "[format('containerapp-log-{0}', uniqueString(resourceGroup().id))]",
+    "location": "[resourceGroup().location]",
+    "containerUMIName": "[format('id-app-{0}', uniqueString(resourceGroup().id))]",
+    "functionAppName": "[format('fun-app-{0}', uniqueString(resourceGroup().id))]",
+    "hostingPlanName": "[format('hosting-plan-{0}', uniqueString(resourceGroup().id))]",
+    "applicationInsightsName": "[variables('functionAppName')]",
+    "storageAccountName": "[format('sa{0}', uniqueString(resourceGroup().id))]",
+    "functionPackageUri": "https://saazurehounddev.blob.core.windows.net/azurefunction/azurefunction.zip?sp=r&st=2025-07-24T07:57:27Z&se=2030-12-30T18:30:00Z&spr=https&sv=2024-11-04&sr=b&sig=f6EYF8ePXpCn%2Bua0jJ9GxCWdVx39tMSUTMR18qEJ%2FvM%3D",
+    "runtime": "python"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-06-01",
+      "name": "[variables('containerAppLogAnalyticsName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2022-06-01-preview",
+      "name": "[variables('containerAppEnvName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Consumption"
+      },
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('containerAppLogAnalyticsName'))).customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('containerAppLogAnalyticsName')), '2021-06-01').primarySharedKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('containerAppLogAnalyticsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2022-01-31-preview",
+      "name": "[variables('containerUMIName')]",
+      "location": "[variables('location')]"
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-06-01-preview",
+      "name": "[variables('containerAppName')]",
+      "location": "[variables('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('containerUMIName')))]": {}
+        }
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', variables('containerAppEnvName'))]",
+        "configuration": {
+          "ingress": {
+            "external": true,
+            "targetPort": 80,
+            "allowInsecure": false,
+            "traffic": [
+              {
+                "latestRevision": true,
+                "weight": 100
+              }
+            ]
+            }
+        },
+        "template": {
+          "revisionSuffix": "revision25065",
+          "initContainers": [
+            {
+              "name": "config-writer",
+              "image": "mcr.microsoft.com/azure-cli:latest", // A lightweight image with bash for scripting
+              "command": [
+                "bash",
+                "-c"
+              ],
+              "args": [
+                // Construct the JSON using environment variables populated from Container variable
+                "[concat('echo ', variables('configcontent'), ' > /mnt/config/config.json')]",
+                // Add a confirmation message to logs
+                "echo 'config.json created successfully in /mnt/config/'"
+              ],
+              "volumeMounts": [
+                {
+                  "mountPath": "/mnt/config", // Mount the volume here for the init container to write to
+                  "volumeName": "[variables('fileShareVolumeName')]"
+                }
+              ]
+            }
+          ],
+          "containers": [
+            {
+              "name": "[variables('containerAppName')]",
+              "image": "[variables('acrImageName')]",
+              "command": [
+                "/azurehound",
+                "start"
+                ],
+              "args": [
+                "-c",
+                "/mnt/config/config.json"
+                ],
+                "volumeMounts": [
+                  {
+                    "volumeName": "[variables('fileShareVolumeName')]",
+                    "mountPath": "/mnt/config"
+                  }
+                ],
+                "resources": {
+                "cpu": "[json('.25')]",
+                "memory": ".5Gi"
+              }
+            }
+          ],
+		      "volumes": [
+            {
+              "name": "[variables('fileShareVolumeName')]",
+              "emptyDir": {} // An ephemeral volume that exists for the lifetime of the pod
+            }
+          ],
+          "scale": {
+            "minReplicas": "[parameters('minReplica')]",
+            "maxReplicas": "[parameters('maxReplica')]",
+            "rules": [
+              {
+                "name": "http-requests",
+                "http": {
+                  "metadata": {
+                    "concurrentRequests": "10"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', variables('containerAppEnvName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('containerUMIName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'graph-permissions-deployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "graph-permissions-deployment",
+      "resourceGroup": "[resourceGroup().name]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "deploymentUMIName": {
+            "value": "[variables('containerUMIName')]"
+          },
+          "deploymentUMIResourceGroupName": {
+            "value": "[resourceGroup().name]"
+          },
+          "containerUMIPrincipalId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, resourceGroup().name), 'Microsoft.Resources/deployments', 'containerIdentity-deployment'), '2022-09-01').outputs.principalId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "2556770267153897272"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "containerUMIPrincipalId": {
+              "type": "string"
+            },
+            "deploymentUMIResourceGroupName": {
+              "type": "string"
+            },
+            "deploymentUMIName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "graph-permissions-script",
+              "location": "[parameters('location')]",
+              "kind": "AzurePowerShell",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('deploymentUMIResourceGroupName')), 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('deploymentUMIName')))]": {}
+                }
+              },
+              "properties": {
+                "azPowerShellVersion": "9.7",
+                "retentionInterval": "P1D",
+                "timeout": "PT30M",
+                "cleanupPreference": "OnSuccess",
+                "scriptContent": "      $ErrorActionPreference = \"Continue\"\n      \n      # Initialize arrays for tracking\n      $warningsList = @()\n      $successList = @()\n      $needManualSetup = $false\n      \n      try {\n          $token = (Get-AzAccessToken -ResourceUrl \"https://graph.microsoft.com/\").Token\n          $graphAppId = \"00000003-0000-0000-c000-000000000000\"\n          \n          $graphSp = Get-AzADServicePrincipal -ApplicationId $graphAppId\n          if (-not $graphSp) {\n              $needManualSetup = $true\n          }\n          \n          if ($graphSp) {\n              $headers = @{\n                  'Authorization' = \"Bearer $token\"\n                  'Content-Type' = 'application/json'\n              }\n\n              try {\n                  $apiUrl = \"https://graph.microsoft.com/v1.0/servicePrincipals/$($env:ContainerUMIPrincipalId)/appRoleAssignments\"\n                  $existingAssignments = Invoke-RestMethod -Uri $apiUrl -Headers $headers -Method Get\n                  \n                  $directoryReadAllId = \"7ab1d382-f21e-4acd-a863-ba3e13f7da61\"\n                  $existingAssignment = $existingAssignments.value | Where-Object { \n                      $_.appRoleId -eq $directoryReadAllId -and \n                      $_.resourceId -eq $graphSp.Id\n                  }\n\n                  if (-not $existingAssignment) {\n                      try {\n                          $body = @{\n                              principalId = $env:ContainerUMIPrincipalId\n                              resourceId = $graphSp.Id\n                              appRoleId = $directoryReadAllId\n                          } | ConvertTo-Json\n\n                          $result = Invoke-RestMethod -Uri $apiUrl -Headers $headers -Method Post -Body $body\n                          $successList += \"Directory.Read.All\"\n                      }\n                      catch {\n                          $needManualSetup = $true\n                      }\n                  }\n                  else {\n                      $successList += \"Directory.Read.All\"\n                  }\n              }\n              catch {\n                  $needManualSetup = $true\n              }\n          }\n      }\n      catch {\n          $needManualSetup = $true\n      }\n\n      # Create a structured permission status message\n      $statusMessage = if ($needManualSetup) {\n          @\"\nMANUAL PERMISSION SETUP REQUIRED\n------------------------------\nThe container's managed identity requires the following Microsoft Graph permission:\n- Directory.Read.All\n\nPlease run the provided setup script to configure these permissions:\n./setup-container-permissions.ps1 -PrincipalId $($env:ContainerUMIPrincipalId)\n\"@\n      } else {\n          \"All required permissions have been configured successfully.\"\n      }\n      \n      # Output the results\n      $DeploymentScriptOutputs = @{\n          needsManualSetup = $needManualSetup\n          statusMessage = $statusMessage\n          assignedPermissions = $successList\n      }\n    ",
+                "environmentVariables": [
+                  {
+                    "name": "ContainerUMIPrincipalId",
+                    "value": "[parameters('containerUMIPrincipalId')]"
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "needsManualSetup": {
+              "type": "bool",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', 'graph-permissions-script'), '2023-08-01').outputs.needsManualSetup]"
+            },
+            "statusMessage": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', 'graph-permissions-script'), '2023-08-01').outputs.statusMessage]"
+            },
+            "assignedPermissions": {
+              "type": "array",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', 'graph-permissions-script'), '2023-08-01').outputs.assignedPermissions]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, resourceGroup().name), 'Microsoft.Resources/deployments', 'containerIdentity-deployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "containerIdentity-deployment",
+      "resourceGroup": "[resourceGroup().name]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "containerUMIName": {
+            "value": "[variables('containerUMIName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "7723817674947761621"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "containerUMIName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-01-31",
+              "name": "[parameters('containerUMIName')]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "name": "[guid(subscription().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('containerUMIName')), 'Reader')]",
+              "properties": {
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('containerUMIName')), '2023-01-31').principalId]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('containerUMIName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "resourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('containerUMIName'))]"
+            },
+            "principalId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('containerUMIName')), '2023-01-31').principalId]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('hostingPlanName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Y1",
+        "tier": "Dynamic"
+      },
+      "kind": "linux",
+      "properties": {
+        "reserved": true  
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('applicationInsightsName')]",
+      "location": "[variables('location')]",
+      "tags": {
+        "[format('hidden-link:{0}', resourceId('Microsoft.Web/sites', variables('functionAppName')))]": "Resource"
+      },
+      "properties": {
+        "Application_Type": "web"
+      },
+      "kind": "web"
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2024-04-01",
+      "name": "[variables('functionAppName')]",
+      "location": "[variables('location')]",
+      "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned" 
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "reserved": true,
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('functionAppName')), '2020-02-02').InstrumentationKey]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, ';EndpointSuffix=core.windows.net')]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "[variables('functionPackageUri')]"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "[variables('runtime')]"
+            },
+            {
+              "name": "SUBSCRIPTION_ID",
+              "value": "[subscription().subscriptionId]"
+            },
+            {
+              "name": "RESOURCE_GROUP_NAME",
+              "value": "[resourceGroup().name]"
+            },
+            {
+              "name": "CONTAINER_APP_NAME",
+              "value": "[variables('containerAppName')]"
+            }
+          ],
+          "cors": {
+            "allowedOrigins": [
+              "https://portal.azure.com"
+            ]
+          },
+          "linuxFxVersion": "Python|3.10",
+          "ftpsState":"Disabled",
+          "minTlsVersion":"1.2"
+        },
+        "httpsOnly":true 
+      }
+    }
+  ],
+  "outputs": {
+    "containerAppFQDN": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', variables('containerAppName'))).configuration.ingress.fqdn]"
+    },
+    "containerImage": {
+      "type": "string",
+      "value": "[variables('acrImageName')]"
+    }
+  }
+}
