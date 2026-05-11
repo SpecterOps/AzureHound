@@ -149,8 +149,7 @@ jobs:
 
       - name: Checksum Zipped Files
         run: |
-          cd zipped
-          sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
+          (cd zipped && sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256)
 
       - name: Upload Artifacts to S3
         run: |
@@ -159,7 +158,7 @@ jobs:
       - name: Upload Latest Version to S3
         if: ${{ !contains(env.AZUREHOUND_VERSION, '-') }}
         run: |
-          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azh-latest-version
+          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version
 
   containerize:
     runs-on: ubuntu-latest
