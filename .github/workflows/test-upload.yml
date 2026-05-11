@@ -1,0 +1,21 @@
+name: Test Upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-upload-version:
+    runs-on: ubuntu-22.04 # INFO: https://docs.digicert.com/en/digicert-keylocker/code-signing/sign-with-third-party-signing-tools/windows-applications/sign-authenticode-files-with-osslsigncode-using-openssl-pkcs11-engine.html#a-note-for-ubuntu-users-488674
+    env:
+      AZUREHOUND_VERSION: v2.12.1
+    steps:
+      - uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # ratchet:aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.BHE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.BHE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload Latest Version to S3
+        if: ${{ !contains(env.AZUREHOUND_VERSION, '-') }}
+        run: |
+          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version
