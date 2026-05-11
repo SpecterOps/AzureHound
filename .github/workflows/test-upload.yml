@@ -2,6 +2,9 @@ name: Test Upload
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - lfalslev/bed-7545
 
 jobs:
   test-upload-version:
