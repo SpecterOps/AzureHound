@@ -81,8 +81,6 @@ jobs:
           tags: azurehound # temporary tag to simplify oci conversion
           labels: ${{ steps.meta.outputs.labels }}
           push: false
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
           # Multi-platform builds can not be loaded into local Docker Daemon
           outputs: type=oci,dest=/tmp/oci-image.tar
 
@@ -100,8 +98,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ ! startsWith(github.event_name, 'pull_request') }}
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_SCOPE }}
 
   build:
     runs-on: ubuntu-latest
