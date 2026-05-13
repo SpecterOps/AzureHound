@@ -237,3 +237,6 @@ tags
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# AI
+.claude/
