@@ -149,11 +149,26 @@ jobs:
 
       - name: Checksum Zipped Files
         run: |
-          sha256sum zipped/${{ env.FILE_NAME }}.zip > zipped/${{ env.FILE_NAME }}.zip.sha256
+          (cd zipped && sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256)
 
       - name: Upload Artifacts to S3
         run: |
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
+
+  publish_latest_version_marker:
+    runs-on: ubuntu-latest
+    needs: sign
+    steps:
+      - uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # ratchet:aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.BHE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.BHE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload Latest Version to S3
+        if: ${{ !contains(env.AZUREHOUND_VERSION, '-') }}
+        run: |
+          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version
 
   containerize:
     runs-on: ubuntu-latest
