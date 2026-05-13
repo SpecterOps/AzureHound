@@ -98,7 +98,7 @@ jobs:
 
       - name: Install DigiCert Client Tools
         id: digicert
-        uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # ratchet:digicert/ssm-code-signing@v1.2.1
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # ratchet:digicert/code-signing-software-trust-action@v1.2.1
 
       - name: Set PKCS#11 Paths
         id: pkcs11
