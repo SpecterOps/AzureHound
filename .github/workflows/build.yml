@@ -37,11 +37,11 @@ jobs:
 
       - name: Login to GHCR
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # ratchet:docker/login-action@v4
-        if: ${{ ! startsWith(github.event_name, 'pull_request') }}
+        # if: ${{ ! startsWith(github.event_name, 'pull_request') }} # TEMP: enable on PRs to test GHCR auth — REVERT BEFORE MERGE
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USER }}
-          password: ${{ secrets.PACKAGE_SCOPE }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # ratchet:aws-actions/configure-aws-credentials@v6
