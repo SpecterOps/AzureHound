@@ -58,6 +58,21 @@ func (s *azureClient) GetAzureADTenants(ctx context.Context, includeAllTenantCat
 	}
 }
 
+func (s *azureClient) GetAzureADTenantInfoById(ctx context.Context, tenantId string) (azure.Tenant, error) {
+	var (
+		path     = fmt.Sprintf("/%s/tenantRelationships/findTenantInformationByTenantId(tenantId='%s')", constants.GraphApiVersion, tenantId)
+		headers  map[string]string
+		response azure.Tenant
+	)
+	if res, err := s.msgraph.Get(ctx, path, query.GraphParams{}, headers); err != nil {
+		return response, err
+	} else if err := rest.Decode(res.Body, &response); err != nil {
+		return response, err
+	} else {
+		return response, nil
+	}
+}
+
 // ListAzureADTenants https://learn.microsoft.com/en-us/rest/api/subscription/tenants/list?view=rest-subscription-2020-01-01
 func (s *azureClient) ListAzureADTenants(ctx context.Context, includeAllTenantCategories bool) <-chan AzureResult[azure.Tenant] {
 	var (

@@ -22,4 +22,5 @@ import "github.com/bloodhoundad/azurehound/v2/models/azure"
 type Tenant struct {
 	azure.Tenant
 	Collected bool `json:"collected,omitempty"`
+	External  bool `json:"external,omitempty"`
 }
