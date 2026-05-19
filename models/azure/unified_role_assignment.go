@@ -24,12 +24,16 @@ type UnifiedRoleAssignment struct {
 
 	// Identifier of the role definition the assignment is for.
 	// Read only.
-	// Supports $filer (eq, in).
+	// Supports $filter (eq, in).
 	RoleDefinitionId string `json:"roleDefinitionId,omitempty"`
 
 	// Identifier of the principal to which the assignment is granted.
 	// Supports $filter (eq, in).
 	PrincipalId string `json:"principalId,omitempty"`
+
+	// Identifier of the organization (tenant) the principal belongs to
+	// Read only and does not support $filter.
+	PrincipalOrganizationId string `json:"principalOrganizationId,omitempty"`
 
 	// Identifier of the directory object representing the scope of the assignment.
 	// Either this property or appScopeId is required.

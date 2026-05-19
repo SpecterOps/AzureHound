@@ -30,7 +30,7 @@ import (
 func (s *azureClient) ListAzureADRoleAssignments(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleAssignment] {
 	var (
 		out  = make(chan AzureResult[azure.UnifiedRoleAssignment])
-		path = fmt.Sprintf("/%s/roleManagement/directory/roleAssignments", constants.GraphApiVersion)
+		path = fmt.Sprintf("/%s/roleManagement/directory/roleAssignments", constants.GraphApiBetaVersion)
 	)
 
 	if params.Top == 0 {
