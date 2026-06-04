@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - v*.*.*
+  workflow_dispatch:
 env:
   AZUREHOUND_VERSION: ${{ github.ref_name }}
 jobs:
@@ -59,6 +60,7 @@ jobs:
         run: sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Release
+        if: github.event_name != 'workflow_dispatch'
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3
         with:
           files: |
@@ -93,10 +95,12 @@ jobs:
 
       - name: Setup SM_CLIENT_CERT_FILE
         shell: bash
+        env:
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
         run: |
-          export SM_CLIENT_CERT_FILE=${RUNNER_TEMP}/Certifiact_pkcs12.p12
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${SM_CLIENT_CERT_FILE}
-          echo "SM_CLIENT_CERT_FILE=${SM_CLIENT_CERT_FILE}" >> $GITHUB_ENV
+          SM_CLIENT_CERT_FILE="${RUNNER_TEMP}/Certificate_pkcs12.p12"
+          printenv SM_CLIENT_CERT_FILE_B64 | base64 --decode > "$SM_CLIENT_CERT_FILE"
+          echo "SM_CLIENT_CERT_FILE=${SM_CLIENT_CERT_FILE}" >> "$GITHUB_ENV"
 
       - name: Setup Software Trust Manager & Sign
         id: digicert
@@ -110,6 +114,11 @@ jobs:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
           SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE}}
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Cleanup cert file
+        if: always()
+        shell: bash
+        run: rm -f "${{ env.SM_CLIENT_CERT_FILE }}"
 
       - name: Move Signed Artifacts
         shell: bash
@@ -127,10 +136,12 @@ jobs:
           sha256sum zipped/${{ env.FILE_NAME }}.zip > zipped/${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Artifacts to S3
+        if: github.event_name != 'workflow_dispatch'
         run: |
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
 
   containerize:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       packages: write
