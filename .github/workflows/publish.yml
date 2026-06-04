@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - v*.*.*
-  workflow_dispatch:
+  pull_request: # TODO(BED-8168): remove before merge
+    branches: [main]
 env:
   AZUREHOUND_VERSION: ${{ github.ref_name }}
 jobs:
@@ -60,7 +61,7 @@ jobs:
         run: sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Release
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'pull_request' # TODO(BED-8168): remove before merge
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3
         with:
           files: |
@@ -136,12 +137,12 @@ jobs:
           sha256sum zipped/${{ env.FILE_NAME }}.zip > zipped/${{ env.FILE_NAME }}.zip.sha256
 
       - name: Upload Artifacts to S3
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'pull_request' # TODO(BED-8168): remove before merge
         run: |
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
 
   containerize:
-    if: github.event_name != 'workflow_dispatch'
+    if: github.event_name != 'pull_request' # TODO(BED-8168): remove before merge
     runs-on: ubuntu-latest
     permissions:
       packages: write
