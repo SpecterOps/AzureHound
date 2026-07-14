@@ -43,3 +43,10 @@ type GroupOwners struct {
 	Owners  []GroupOwner `json:"owners"`
 	GroupId string       `json:"groupId"`
 }
+
+func (s GroupOwners) MarshalJSON() ([]byte, error) {
+	type Alias GroupOwners
+	a := Alias(s)
+	a.GroupId = strings.ToUpper(a.GroupId)
+	return json.Marshal(a)
+}

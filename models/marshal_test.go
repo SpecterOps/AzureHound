@@ -110,6 +110,67 @@ func TestGroupOwnerMarshalJSONUppercasesOwnerId(t *testing.T) {
 	require.Equal(t, "OWNER-1", ownerBlob["id"])
 }
 
+func TestServicePrincipalOwnersMarshalJSONUppercasesServicePrincipalId(t *testing.T) {
+	owners := models.ServicePrincipalOwners{
+		ServicePrincipalId: "sp-1",
+		Owners: []models.ServicePrincipalOwner{
+			{
+				ServicePrincipalId: "sp-1",
+				Owner:              json.RawMessage(`{"id":"owner-1","@odata.type":"#microsoft.graph.user"}`),
+			},
+		},
+	}
+
+	out := marshalToMap(t, owners)
+
+	// Top-level id is the edge endpoint and must match the AZServicePrincipal node ObjectID.
+	require.Equal(t, "SP-1", out["servicePrincipalId"])
+	entry := out["owners"].([]any)[0].(map[string]any)
+	require.Equal(t, "SP-1", entry["servicePrincipalId"])
+	ownerBlob := entry["owner"].(map[string]any)
+	require.Equal(t, "OWNER-1", ownerBlob["id"])
+}
+
+func TestGroupOwnersMarshalJSONUppercasesGroupId(t *testing.T) {
+	owners := models.GroupOwners{
+		GroupId: "group-1",
+		Owners: []models.GroupOwner{
+			{
+				GroupId: "group-1",
+				Owner:   json.RawMessage(`{"id":"owner-1","@odata.type":"#microsoft.graph.user"}`),
+			},
+		},
+	}
+
+	out := marshalToMap(t, owners)
+
+	require.Equal(t, "GROUP-1", out["groupId"])
+	entry := out["owners"].([]any)[0].(map[string]any)
+	require.Equal(t, "GROUP-1", entry["groupId"])
+	ownerBlob := entry["owner"].(map[string]any)
+	require.Equal(t, "OWNER-1", ownerBlob["id"])
+}
+
+func TestAppOwnersMarshalJSONUppercasesAppId(t *testing.T) {
+	owners := models.AppOwners{
+		AppId: "app-1",
+		Owners: []models.AppOwner{
+			{
+				AppId: "app-1",
+				Owner: json.RawMessage(`{"id":"owner-1","@odata.type":"#microsoft.graph.user"}`),
+			},
+		},
+	}
+
+	out := marshalToMap(t, owners)
+
+	require.Equal(t, "APP-1", out["appId"])
+	entry := out["owners"].([]any)[0].(map[string]any)
+	require.Equal(t, "APP-1", entry["appId"])
+	ownerBlob := entry["owner"].(map[string]any)
+	require.Equal(t, "OWNER-1", ownerBlob["id"])
+}
+
 func TestKeyVaultOwnersMarshalJSONUppercasesScopeAndPrincipal(t *testing.T) {
 	owners := models.KeyVaultOwners{
 		KeyVaultId: "/subscriptions/s/kv-1",
