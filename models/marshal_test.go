@@ -51,6 +51,22 @@ func TestGroupMarshalJSONUppercasesOnPremSID(t *testing.T) {
 	require.Equal(t, "s-1-5-21-ghi-jkl", group.OnPremisesSecurityIdentifier)
 }
 
+func TestAppMarshalJSONUppercasesIdentifiers(t *testing.T) {
+	app := models.App{TenantId: "tenant-abc"}
+	app.Id = "app-def"
+	app.AppId = "appid-ghi"
+
+	out := marshalToMap(t, app)
+
+	require.Equal(t, "APP-DEF", out["id"])
+	require.Equal(t, "APPID-GHI", out["appId"])
+	require.Equal(t, "TENANT-ABC", out["tenantId"])
+	// Source is unchanged.
+	require.Equal(t, "app-def", app.Id)
+	require.Equal(t, "appid-ghi", app.AppId)
+	require.Equal(t, "tenant-abc", app.TenantId)
+}
+
 func TestVirtualMachineMarshalJSONUppercasesIdentityNonMutating(t *testing.T) {
 	vm := models.VirtualMachine{
 		SubscriptionId:  "sub-1",

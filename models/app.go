@@ -33,6 +33,7 @@ type App struct {
 func (s App) MarshalJSON() ([]byte, error) {
 	type Alias App
 	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
 	a.AppId = strings.ToUpper(a.AppId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)
