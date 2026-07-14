@@ -17,14 +17,34 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type VirtualMachineOwner struct {
 	Owner            azure.RoleAssignment `json:"owner"`
 	VirtualMachineId string               `json:"virtualMachineId"`
 }
 
+func (s VirtualMachineOwner) MarshalJSON() ([]byte, error) {
+	type Alias VirtualMachineOwner
+	a := Alias(s)
+	a.VirtualMachineId = strings.ToUpper(a.VirtualMachineId)
+	a.Owner = UpperRoleAssignment(a.Owner)
+	return json.Marshal(a)
+}
+
 type VirtualMachineOwners struct {
 	Owners           []VirtualMachineOwner `json:"owners"`
 	VirtualMachineId string                `json:"virtualMachineId"`
+}
+
+func (s VirtualMachineOwners) MarshalJSON() ([]byte, error) {
+	type Alias VirtualMachineOwners
+	a := Alias(s)
+	a.VirtualMachineId = strings.ToUpper(a.VirtualMachineId)
+	return json.Marshal(a)
 }

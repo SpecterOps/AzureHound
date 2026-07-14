@@ -18,6 +18,9 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
@@ -25,4 +28,13 @@ type User struct {
 	azure.User
 	TenantId   string `json:"tenantId"`
 	TenantName string `json:"tenantName"`
+}
+
+func (s User) MarshalJSON() ([]byte, error) {
+	type Alias User
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	a.OnPremisesSecurityIdentifier = strings.ToUpper(a.OnPremisesSecurityIdentifier)
+	return json.Marshal(a)
 }

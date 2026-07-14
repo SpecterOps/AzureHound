@@ -17,11 +17,25 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type KeyVault struct {
 	azure.KeyVault
 	SubscriptionId string `json:"subscriptionId"`
 	ResourceGroup  string `json:"resourceGroup"`
 	TenantId       string `json:"tenantId"`
+}
+
+func (s KeyVault) MarshalJSON() ([]byte, error) {
+	type Alias KeyVault
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.ResourceGroup = strings.ToUpper(a.ResourceGroup)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

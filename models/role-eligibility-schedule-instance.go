@@ -17,6 +17,11 @@
 
 package models
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 type RoleEligibilityScheduleInstance struct {
 	Id               string `json:"id,omitempty"`
 	RoleDefinitionId string `json:"roleDefinitionId,omitempty"`
@@ -24,4 +29,13 @@ type RoleEligibilityScheduleInstance struct {
 	DirectoryScopeId string `json:"directoryScopeId,omitempty"`
 	StartDateTime    string `json:"startDateTime,omitempty"`
 	TenantId         string `json:"tenantId,omitempty"`
+}
+
+func (s RoleEligibilityScheduleInstance) MarshalJSON() ([]byte, error) {
+	type Alias RoleEligibilityScheduleInstance
+	a := Alias(s)
+	a.RoleDefinitionId = strings.ToUpper(a.RoleDefinitionId)
+	a.PrincipalId = strings.ToUpper(a.PrincipalId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

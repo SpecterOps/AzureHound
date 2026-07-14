@@ -19,6 +19,7 @@ package models
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 type GroupMember struct {
@@ -26,11 +27,11 @@ type GroupMember struct {
 	GroupId string          `json:"groupId"`
 }
 
-func (s *GroupMember) MarshalJSON() ([]byte, error) {
+func (s GroupMember) MarshalJSON() ([]byte, error) {
 	output := make(map[string]any)
-	output["groupId"] = s.GroupId
+	output["groupId"] = strings.ToUpper(s.GroupId)
 
-	if member, err := OmitEmpty(s.Member); err != nil {
+	if member, err := OmitEmptyUpper(s.Member, "id"); err != nil {
 		return nil, err
 	} else {
 		output["member"] = member

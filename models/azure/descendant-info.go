@@ -17,6 +17,11 @@
 
 package azure
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 // The properties of the parent management group.
 type DescendantParentGroupInfo struct {
 	// The fully qualified ID for the parent management group.
@@ -59,4 +64,12 @@ type DescendantInfo struct {
 	// - Microsoft.Management/managementGroups
 	// - /subscriptions
 	Type string `json:"type,omitempty"`
+}
+
+func (s DescendantInfo) MarshalJSON() ([]byte, error) {
+	type Alias DescendantInfo
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.Properties.Parent.Id = strings.ToUpper(a.Properties.Parent.Id)
+	return json.Marshal(a)
 }

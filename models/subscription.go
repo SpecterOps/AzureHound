@@ -17,9 +17,22 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type Subscription struct {
 	azure.Subscription
 	TenantId string `json:"tenantId"`
+}
+
+func (s Subscription) MarshalJSON() ([]byte, error) {
+	type Alias Subscription
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

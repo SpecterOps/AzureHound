@@ -17,14 +17,34 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type SubscriptionUserAccessAdmin struct {
 	UserAccessAdmin azure.RoleAssignment `json:"userAccessAdmin"`
 	SubscriptionId  string               `json:"subscriptionId"`
 }
 
+func (s SubscriptionUserAccessAdmin) MarshalJSON() ([]byte, error) {
+	type Alias SubscriptionUserAccessAdmin
+	a := Alias(s)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
+	a.UserAccessAdmin = UpperRoleAssignment(a.UserAccessAdmin)
+	return json.Marshal(a)
+}
+
 type SubscriptionUserAccessAdmins struct {
 	UserAccessAdmins []SubscriptionUserAccessAdmin `json:"userAccessAdmins"`
 	SubscriptionId   string                        `json:"subscriptionId"`
+}
+
+func (s SubscriptionUserAccessAdmins) MarshalJSON() ([]byte, error) {
+	type Alias SubscriptionUserAccessAdmins
+	a := Alias(s)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
+	return json.Marshal(a)
 }

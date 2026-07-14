@@ -18,10 +18,21 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
 type ManagementGroup struct {
 	azure.ManagementGroup
 	TenantId string `json:"tenantId"`
+}
+
+func (s ManagementGroup) MarshalJSON() ([]byte, error) {
+	type Alias ManagementGroup
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

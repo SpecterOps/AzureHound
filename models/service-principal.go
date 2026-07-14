@@ -17,10 +17,25 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type ServicePrincipal struct {
 	azure.ServicePrincipal
 	TenantId   string `json:"tenantId"`
 	TenantName string `json:"tenantName"`
+}
+
+func (s ServicePrincipal) MarshalJSON() ([]byte, error) {
+	type Alias ServicePrincipal
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.AppId = strings.ToUpper(a.AppId)
+	a.AppOwnerOrganizationId = strings.ToUpper(a.AppOwnerOrganizationId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

@@ -19,6 +19,7 @@ package models
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 type AppMember struct {
@@ -26,13 +27,16 @@ type AppMember struct {
 	AppId string `json:"appId"`
 }
 
-func (s *AppMember) MarshalJSON() ([]byte, error) {
+func (s AppMember) MarshalJSON() ([]byte, error) {
 	var data map[string]any
 	if err := json.Unmarshal(s.RawMessage, &data); err != nil {
 		return nil, err
 	} else {
 		StripEmptyEntries(data)
-		data["appId"] = s.AppId
+		if id, ok := data["id"].(string); ok {
+			data["id"] = strings.ToUpper(id)
+		}
+		data["appId"] = strings.ToUpper(s.AppId)
 		return json.Marshal(data)
 	}
 }

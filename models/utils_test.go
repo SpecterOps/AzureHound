@@ -226,3 +226,35 @@ func TestOmitEmpty(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestOmitEmptyUpper(t *testing.T) {
+	t.Run("should uppercase the requested string keys", func(t *testing.T) {
+		data := json.RawMessage(`{"id":"abc-def","name":"keepMe"}`)
+
+		filtered, err := models.OmitEmptyUpper(data, "id")
+		require.Nil(t, err)
+		require.Equal(t, `{"id":"ABC-DEF","name":"keepMe"}`, string(filtered))
+	})
+
+	t.Run("should leave missing keys and non-string values untouched", func(t *testing.T) {
+		data := json.RawMessage(`{"id":42,"name":"keepMe"}`)
+
+		filtered, err := models.OmitEmptyUpper(data, "id", "missing")
+		require.Nil(t, err)
+		require.Equal(t, `{"id":42,"name":"keepMe"}`, string(filtered))
+	})
+
+	t.Run("should still strip empty entries", func(t *testing.T) {
+		data := json.RawMessage(`{"id":"abc","empty":""}`)
+
+		filtered, err := models.OmitEmptyUpper(data, "id")
+		require.Nil(t, err)
+		require.Equal(t, `{"id":"ABC"}`, string(filtered))
+	})
+
+	t.Run("should return an error on invalid json", func(t *testing.T) {
+		invalidJson := json.RawMessage(`{]}`)
+		_, err := models.OmitEmptyUpper(invalidJson, "id")
+		require.Error(t, err)
+	})
+}

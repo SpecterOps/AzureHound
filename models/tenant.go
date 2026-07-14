@@ -17,9 +17,21 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type Tenant struct {
 	azure.Tenant
 	Collected bool `json:"collected,omitempty"`
+}
+
+func (s Tenant) MarshalJSON() ([]byte, error) {
+	type Alias Tenant
+	a := Alias(s)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

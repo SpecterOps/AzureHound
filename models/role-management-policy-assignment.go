@@ -17,7 +17,12 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type RoleManagementPolicyAssignment struct {
 	azure.UnifiedRoleManagementPolicyAssignment
@@ -32,4 +37,14 @@ type RoleManagementPolicyAssignment struct {
 	EndUserAssignmentRequiresJustification            bool     `json:"endUserAssignmentRequiresJustification,omitempty"`
 	EndUserAssignmentRequiresTicketInformation        bool     `json:"endUserAssignmentRequiresTicketInformation,omitempty"`
 	TenantId                                          string   `json:"tenantId,omitempty"`
+}
+
+func (s RoleManagementPolicyAssignment) MarshalJSON() ([]byte, error) {
+	type Alias RoleManagementPolicyAssignment
+	a := Alias(s)
+	a.RoleDefinitionId = strings.ToUpper(a.RoleDefinitionId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	a.EndUserAssignmentUserApprovers = upperStrings(a.EndUserAssignmentUserApprovers)
+	a.EndUserAssignmentGroupApprovers = upperStrings(a.EndUserAssignmentGroupApprovers)
+	return json.Marshal(a)
 }

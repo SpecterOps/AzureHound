@@ -17,11 +17,26 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type VMScaleSet struct {
 	azure.VMScaleSet
 	SubscriptionId  string `json:"subscriptionId"`
 	ResourceGroupId string `json:"resourceGroupId"`
 	TenantId        string `json:"tenantId"`
+}
+
+func (s VMScaleSet) MarshalJSON() ([]byte, error) {
+	type Alias VMScaleSet
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	a.Identity = UpperManagedIdentity(a.Identity)
+	return json.Marshal(a)
 }

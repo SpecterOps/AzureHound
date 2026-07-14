@@ -17,10 +17,24 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type ResourceGroup struct {
 	azure.ResourceGroup
 	SubscriptionId string `json:"subscriptionId"`
 	TenantId       string `json:"tenantId"`
+}
+
+func (s ResourceGroup) MarshalJSON() ([]byte, error) {
+	type Alias ResourceGroup
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

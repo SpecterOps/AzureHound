@@ -18,6 +18,9 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
@@ -26,7 +29,22 @@ type ManagementGroupUserAccessAdmin struct {
 	ManagementGroupId string               `json:"managementGroupId"`
 }
 
+func (s ManagementGroupUserAccessAdmin) MarshalJSON() ([]byte, error) {
+	type Alias ManagementGroupUserAccessAdmin
+	a := Alias(s)
+	a.ManagementGroupId = strings.ToUpper(a.ManagementGroupId)
+	a.UserAccessAdmin = UpperRoleAssignment(a.UserAccessAdmin)
+	return json.Marshal(a)
+}
+
 type ManagementGroupUserAccessAdmins struct {
 	UserAccessAdmins  []ManagementGroupUserAccessAdmin `json:"userAccessAdmins"`
 	ManagementGroupId string                           `json:"managementGroupId"`
+}
+
+func (s ManagementGroupUserAccessAdmins) MarshalJSON() ([]byte, error) {
+	type Alias ManagementGroupUserAccessAdmins
+	a := Alias(s)
+	a.ManagementGroupId = strings.ToUpper(a.ManagementGroupId)
+	return json.Marshal(a)
 }

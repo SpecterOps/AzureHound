@@ -17,14 +17,34 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type VirtualMachineAvereContributor struct {
 	AvereContributor azure.RoleAssignment `json:"avereContributor"`
 	VirtualMachineId string               `json:"virtualMachineId"`
 }
 
+func (s VirtualMachineAvereContributor) MarshalJSON() ([]byte, error) {
+	type Alias VirtualMachineAvereContributor
+	a := Alias(s)
+	a.VirtualMachineId = strings.ToUpper(a.VirtualMachineId)
+	a.AvereContributor = UpperRoleAssignment(a.AvereContributor)
+	return json.Marshal(a)
+}
+
 type VirtualMachineAvereContributors struct {
 	AvereContributors []VirtualMachineAvereContributor `json:"avereContributors"`
 	VirtualMachineId  string                           `json:"virtualMachineId"`
+}
+
+func (s VirtualMachineAvereContributors) MarshalJSON() ([]byte, error) {
+	type Alias VirtualMachineAvereContributors
+	a := Alias(s)
+	a.VirtualMachineId = strings.ToUpper(a.VirtualMachineId)
+	return json.Marshal(a)
 }

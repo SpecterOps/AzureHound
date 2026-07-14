@@ -18,6 +18,9 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
@@ -25,4 +28,27 @@ type AppRoleAssignment struct {
 	azure.AppRoleAssignment
 	AppId    string `json:"appId"`
 	TenantId string `json:"tenantId"`
+}
+
+func (s AppRoleAssignment) MarshalJSON() ([]byte, error) {
+	type Alias AppRoleAssignment
+	a := Alias(s)
+	a.ResourceId = strings.ToUpper(a.ResourceId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+
+	// PrincipalId is a uuid.UUID and cannot hold an uppercased string, so emit
+	// it through a map override alongside the aliased fields.
+	raw, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+
+	var output map[string]any
+	if err := json.Unmarshal(raw, &output); err != nil {
+		return nil, err
+	}
+	if _, ok := output["principalId"]; ok {
+		output["principalId"] = strings.ToUpper(s.PrincipalId.String())
+	}
+	return json.Marshal(output)
 }

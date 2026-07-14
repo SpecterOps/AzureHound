@@ -17,14 +17,34 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type KeyVaultOwner struct {
 	Owner      azure.RoleAssignment `json:"owner"`
 	KeyVaultId string               `json:"keyVaultId"`
 }
 
+func (s KeyVaultOwner) MarshalJSON() ([]byte, error) {
+	type Alias KeyVaultOwner
+	a := Alias(s)
+	a.KeyVaultId = strings.ToUpper(a.KeyVaultId)
+	a.Owner = UpperRoleAssignment(a.Owner)
+	return json.Marshal(a)
+}
+
 type KeyVaultOwners struct {
 	Owners     []KeyVaultOwner `json:"owners"`
 	KeyVaultId string          `json:"keyVaultId"`
+}
+
+func (s KeyVaultOwners) MarshalJSON() ([]byte, error) {
+	type Alias KeyVaultOwners
+	a := Alias(s)
+	a.KeyVaultId = strings.ToUpper(a.KeyVaultId)
+	return json.Marshal(a)
 }

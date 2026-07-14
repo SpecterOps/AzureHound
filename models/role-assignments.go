@@ -18,6 +18,9 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
@@ -25,4 +28,29 @@ type RoleAssignments struct {
 	RoleAssignments  []azure.UnifiedRoleAssignment `json:"roleAssignments"`
 	RoleDefinitionId string                        `json:"roleDefinitionId"`
 	TenantId         string                        `json:"tenantId"`
+}
+
+func (s RoleAssignments) MarshalJSON() ([]byte, error) {
+	type Alias RoleAssignments
+	a := Alias(s)
+	a.RoleDefinitionId = strings.ToUpper(a.RoleDefinitionId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+
+	if s.RoleAssignments != nil {
+		assignments := make([]azure.UnifiedRoleAssignment, len(s.RoleAssignments))
+		for i, assignment := range s.RoleAssignments {
+			assignment.PrincipalId = strings.ToUpper(assignment.PrincipalId)
+			assignment.DirectoryScopeId = strings.ToUpper(assignment.DirectoryScopeId)
+			if len(assignment.Principal) > 0 {
+				if principal, err := OmitEmptyUpper(assignment.Principal, "id"); err != nil {
+					return nil, err
+				} else {
+					assignment.Principal = principal
+				}
+			}
+			assignments[i] = assignment
+		}
+		a.RoleAssignments = assignments
+	}
+	return json.Marshal(a)
 }

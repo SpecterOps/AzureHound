@@ -17,7 +17,12 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type FunctionApp struct {
 	azure.FunctionApp
@@ -25,4 +30,14 @@ type FunctionApp struct {
 	ResourceGroupId   string `json:"resourceGroupId"`
 	ResourceGroupName string `json:"resourceGroupName"`
 	TenantId          string `json:"tenantId"`
+}
+
+func (s FunctionApp) MarshalJSON() ([]byte, error) {
+	type Alias FunctionApp
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	a.Identity = UpperManagedIdentity(a.Identity)
+	return json.Marshal(a)
 }

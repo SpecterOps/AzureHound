@@ -17,14 +17,34 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type KeyVaultKVContributor struct {
 	KVContributor azure.RoleAssignment `json:"kvContributor"`
 	KeyVaultId    string               `json:"keyVaultId"`
 }
 
+func (s KeyVaultKVContributor) MarshalJSON() ([]byte, error) {
+	type Alias KeyVaultKVContributor
+	a := Alias(s)
+	a.KeyVaultId = strings.ToUpper(a.KeyVaultId)
+	a.KVContributor = UpperRoleAssignment(a.KVContributor)
+	return json.Marshal(a)
+}
+
 type KeyVaultKVContributors struct {
 	KVContributors []KeyVaultKVContributor `json:"kvContributors"`
 	KeyVaultId     string                  `json:"keyVaultId"`
+}
+
+func (s KeyVaultKVContributors) MarshalJSON() ([]byte, error) {
+	type Alias KeyVaultKVContributors
+	a := Alias(s)
+	a.KeyVaultId = strings.ToUpper(a.KeyVaultId)
+	return json.Marshal(a)
 }

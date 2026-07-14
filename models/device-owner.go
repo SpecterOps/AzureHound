@@ -19,6 +19,7 @@ package models
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 type DeviceOwner struct {
@@ -26,11 +27,11 @@ type DeviceOwner struct {
 	DeviceId string          `json:"deviceId"`
 }
 
-func (s *DeviceOwner) MarshalJSON() ([]byte, error) {
+func (s DeviceOwner) MarshalJSON() ([]byte, error) {
 	output := make(map[string]any)
-	output["deviceId"] = s.DeviceId
+	output["deviceId"] = strings.ToUpper(s.DeviceId)
 
-	if owner, err := OmitEmpty(s.Owner); err != nil {
+	if owner, err := OmitEmptyUpper(s.Owner, "id"); err != nil {
 		return nil, err
 	} else {
 		output["owner"] = owner

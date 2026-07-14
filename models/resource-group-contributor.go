@@ -17,15 +17,35 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type ResourceGroupContributor struct {
 	Contributor     azure.RoleAssignment `json:"contributor"`
 	ResourceGroupId string               `json:"resourceGroupId"`
 }
 
+func (s ResourceGroupContributor) MarshalJSON() ([]byte, error) {
+	type Alias ResourceGroupContributor
+	a := Alias(s)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.Contributor = UpperRoleAssignment(a.Contributor)
+	return json.Marshal(a)
+}
+
 type ResourceGroupContributors struct {
 	Contributors    []ResourceGroupContributor `json:"contributors"`
 	ResourceGroupId string                     `json:"resourceGroupId"`
+}
+
+func (s ResourceGroupContributors) MarshalJSON() ([]byte, error) {
+	type Alias ResourceGroupContributors
+	a := Alias(s)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	return json.Marshal(a)
 }
 

@@ -18,6 +18,9 @@
 package models
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 )
 
@@ -26,7 +29,22 @@ type ResourceGroupOwner struct {
 	ResourceGroupId string               `json:"resourceGroupId"`
 }
 
+func (s ResourceGroupOwner) MarshalJSON() ([]byte, error) {
+	type Alias ResourceGroupOwner
+	a := Alias(s)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.Owner = UpperRoleAssignment(a.Owner)
+	return json.Marshal(a)
+}
+
 type ResourceGroupOwners struct {
 	Owners          []ResourceGroupOwner `json:"owners"`
 	ResourceGroupId string               `json:"resourceGroupId"`
+}
+
+func (s ResourceGroupOwners) MarshalJSON() ([]byte, error) {
+	type Alias ResourceGroupOwners
+	a := Alias(s)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	return json.Marshal(a)
 }
