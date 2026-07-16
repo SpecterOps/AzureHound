@@ -46,3 +46,15 @@ type AzureRoleAssignments struct {
 	RoleAssignments []AzureRoleAssignment `json:"assignees"`
 	ObjectId        string                `json:"objectId"`
 }
+
+// MarshalJSON uppercases the top-level ObjectId (the resource id BloodHound
+// ingest reads as the RBAC edge target endpoint for the resource-scoped
+// role-assignment convertors) so the raw (use_raw_object_id) ingest path matches
+// the normalized resource node ObjectIDs. The nested assignees uppercase their
+// own identifiers via AzureRoleAssignment.MarshalJSON. The input is not mutated.
+func (s AzureRoleAssignments) MarshalJSON() ([]byte, error) {
+	type Alias AzureRoleAssignments
+	a := Alias(s)
+	a.ObjectId = strings.ToUpper(a.ObjectId)
+	return json.Marshal(a)
+}

@@ -151,6 +151,27 @@ func TestGroupOwnersMarshalJSONUppercasesGroupId(t *testing.T) {
 	require.Equal(t, "OWNER-1", ownerBlob["id"])
 }
 
+func TestGroupMembersMarshalJSONUppercasesGroupId(t *testing.T) {
+	members := models.GroupMembers{
+		GroupId: "group-1",
+		Members: []models.GroupMember{
+			{
+				GroupId: "group-1",
+				Member:  json.RawMessage(`{"id":"member-1","@odata.type":"#microsoft.graph.user"}`),
+			},
+		},
+	}
+
+	out := marshalToMap(t, members)
+
+	// Top-level groupId is the edge endpoint and must match the AZGroup node ObjectID.
+	require.Equal(t, "GROUP-1", out["groupId"])
+	entry := out["members"].([]any)[0].(map[string]any)
+	require.Equal(t, "GROUP-1", entry["groupId"])
+	memberBlob := entry["member"].(map[string]any)
+	require.Equal(t, "MEMBER-1", memberBlob["id"])
+}
+
 func TestAppOwnersMarshalJSONUppercasesAppId(t *testing.T) {
 	owners := models.AppOwners{
 		AppId: "app-1",
@@ -169,6 +190,31 @@ func TestAppOwnersMarshalJSONUppercasesAppId(t *testing.T) {
 	require.Equal(t, "APP-1", entry["appId"])
 	ownerBlob := entry["owner"].(map[string]any)
 	require.Equal(t, "OWNER-1", ownerBlob["id"])
+}
+
+func TestAppFICMarshalJSONUppercasesAppIdAndFicId(t *testing.T) {
+	fics := models.AppFICs{
+		AppId:      "app-1",
+		TenantId:   "tenant-1",
+		TenantName: "SpecterOps Development",
+		FICs: []models.AppFIC{
+			{
+				AppId: "app-1",
+				FIC:   json.RawMessage(`{"id":"fic-1","issuer":"https://token.example/","subject":"repo:example:ref"}`),
+			},
+		},
+	}
+
+	out := marshalToMap(t, fics)
+
+	entry := out["fics"].([]any)[0].(map[string]any)
+	// appId is the AZApp edge endpoint; fic.id is the FIC node ObjectID / source.
+	require.Equal(t, "APP-1", entry["appId"])
+	ficBlob := entry["fic"].(map[string]any)
+	require.Equal(t, "FIC-1", ficBlob["id"])
+	// Display-only fields are left untouched.
+	require.Equal(t, "https://token.example/", ficBlob["issuer"])
+	require.Equal(t, "repo:example:ref", ficBlob["subject"])
 }
 
 func TestKeyVaultOwnersMarshalJSONUppercasesScopeAndPrincipal(t *testing.T) {
@@ -221,17 +267,22 @@ func TestAppRoleAssignmentMarshalJSONUppercasesUUIDFields(t *testing.T) {
 }
 
 func TestAzureRoleAssignmentsMarshalJSONUppercasesEndpointsInSlice(t *testing.T) {
+	// Use a mixed-case ARM resource id (as Azure returns it) to catch the raw
+	// original casing, not just pure-lowercase.
+	const mixedID = "/subscriptions/s/resourceGroups/BHE_RG/providers/Microsoft.ContainerRegistry/registries/specterDev"
+	const upperID = "/SUBSCRIPTIONS/S/RESOURCEGROUPS/BHE_RG/PROVIDERS/MICROSOFT.CONTAINERREGISTRY/REGISTRIES/SPECTERDEV"
+
 	assignments := models.AzureRoleAssignments{
-		ObjectId: "/subscriptions/s/rg/cr-1",
+		ObjectId: mixedID,
 		RoleAssignments: []models.AzureRoleAssignment{
 			{
-				ObjectId:         "/subscriptions/s/rg/cr-1",
+				ObjectId:         mixedID,
 				RoleDefinitionId: "b24988ac-6180-42a0-ab88-20f7382dd24c",
 				Assignee: azure.RoleAssignment{
 					Name: "af7c7710-3443-40e9-be55-f7d8eefba417",
 					Properties: azure.RoleAssignmentPropertiesWithScope{
 						PrincipalId:      "principal-1",
-						Scope:            "/subscriptions/s/rg/cr-1",
+						Scope:            mixedID,
 						RoleDefinitionId: "b24988ac-6180-42a0-ab88-20f7382dd24c",
 					},
 				},
@@ -241,18 +292,24 @@ func TestAzureRoleAssignmentsMarshalJSONUppercasesEndpointsInSlice(t *testing.T)
 
 	out := marshalToMap(t, assignments)
 
+	// Top-level objectId is the resource id BHE reads as the RBAC edge target
+	// (data.ObjectId) for the resource-scoped role-assignment convertors; it must
+	// be uppercased so the raw-path ingest does not create a mixed-case stub node.
+	require.Equal(t, upperID, out["objectId"])
+
 	entry := out["assignees"].([]any)[0].(map[string]any)
-	require.Equal(t, "/SUBSCRIPTIONS/S/RG/CR-1", entry["objectId"])
+	require.Equal(t, upperID, entry["objectId"])
 	assignee := entry["assignee"].(map[string]any)
 	props := assignee["properties"].(map[string]any)
 	// Edge endpoints are uppercased so raw-path ingest matches node ObjectIDs.
 	require.Equal(t, "PRINCIPAL-1", props["principalId"])
-	require.Equal(t, "/SUBSCRIPTIONS/S/RG/CR-1", props["scope"])
+	require.Equal(t, upperID, props["scope"])
 	// RoleDefinitionId is matched against lowercase constants and must be preserved.
 	require.Equal(t, "b24988ac-6180-42a0-ab88-20f7382dd24c", entry["roleDefinitionId"])
 	require.Equal(t, "b24988ac-6180-42a0-ab88-20f7382dd24c", props["roleDefinitionId"])
 	// Source is unchanged.
-	require.Equal(t, "/subscriptions/s/rg/cr-1", assignments.RoleAssignments[0].ObjectId)
+	require.Equal(t, mixedID, assignments.ObjectId)
+	require.Equal(t, mixedID, assignments.RoleAssignments[0].ObjectId)
 	require.Equal(t, "principal-1", assignments.RoleAssignments[0].Assignee.Properties.PrincipalId)
 }
 

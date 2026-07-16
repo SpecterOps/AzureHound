@@ -19,6 +19,7 @@ package models
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 type AppFIC struct {
@@ -26,15 +27,21 @@ type AppFIC struct {
 	AppId string          `json:"appId"`
 }
 
+// MarshalJSON uppercases the AppId and the embedded fic.id so the raw
+// (use_raw_object_id) ingest path matches the normalized node ObjectIDs.
+// BloodHound ingest reads fic.id as the AZFederatedIdentityCredential node
+// ObjectID and AZAuthenticatesTo source, and AppId as the AZApp endpoint. The
+// remaining fic fields (issuer, subject, name, audiences) are display-only and
+// are left untouched. The input is not mutated.
 func (s *AppFIC) MarshalJSON() ([]byte, error) {
 	output := make(map[string]any)
-	output["appId"] = s.AppId
+	output["appId"] = strings.ToUpper(s.AppId)
 
 	if s.FIC == nil {
 		return nil, nil
 	}
 
-	if fic, err := OmitEmpty(s.FIC); err != nil {
+	if fic, err := OmitEmptyUpper(s.FIC, "id"); err != nil {
 		return nil, err
 	} else {
 		output["fic"] = fic
