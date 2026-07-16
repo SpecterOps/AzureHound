@@ -220,6 +220,138 @@ func TestAppRoleAssignmentMarshalJSONUppercasesUUIDFields(t *testing.T) {
 	require.Equal(t, "11111111-2222-3333-4444-555555555555", out["appRoleId"])
 }
 
+func TestAzureRoleAssignmentsMarshalJSONUppercasesEndpointsInSlice(t *testing.T) {
+	assignments := models.AzureRoleAssignments{
+		ObjectId: "/subscriptions/s/rg/cr-1",
+		RoleAssignments: []models.AzureRoleAssignment{
+			{
+				ObjectId:         "/subscriptions/s/rg/cr-1",
+				RoleDefinitionId: "b24988ac-6180-42a0-ab88-20f7382dd24c",
+				Assignee: azure.RoleAssignment{
+					Name: "af7c7710-3443-40e9-be55-f7d8eefba417",
+					Properties: azure.RoleAssignmentPropertiesWithScope{
+						PrincipalId:      "principal-1",
+						Scope:            "/subscriptions/s/rg/cr-1",
+						RoleDefinitionId: "b24988ac-6180-42a0-ab88-20f7382dd24c",
+					},
+				},
+			},
+		},
+	}
+
+	out := marshalToMap(t, assignments)
+
+	entry := out["assignees"].([]any)[0].(map[string]any)
+	require.Equal(t, "/SUBSCRIPTIONS/S/RG/CR-1", entry["objectId"])
+	assignee := entry["assignee"].(map[string]any)
+	props := assignee["properties"].(map[string]any)
+	// Edge endpoints are uppercased so raw-path ingest matches node ObjectIDs.
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+	require.Equal(t, "/SUBSCRIPTIONS/S/RG/CR-1", props["scope"])
+	// RoleDefinitionId is matched against lowercase constants and must be preserved.
+	require.Equal(t, "b24988ac-6180-42a0-ab88-20f7382dd24c", entry["roleDefinitionId"])
+	require.Equal(t, "b24988ac-6180-42a0-ab88-20f7382dd24c", props["roleDefinitionId"])
+	// Source is unchanged.
+	require.Equal(t, "/subscriptions/s/rg/cr-1", assignments.RoleAssignments[0].ObjectId)
+	require.Equal(t, "principal-1", assignments.RoleAssignments[0].Assignee.Properties.PrincipalId)
+}
+
+func TestSubscriptionRoleAssignmentMarshalJSONUppercasesEndpoints(t *testing.T) {
+	ra := models.SubscriptionRoleAssignment{
+		SubscriptionId: "sub-1",
+		RoleAssignment: azure.RoleAssignment{
+			Properties: azure.RoleAssignmentPropertiesWithScope{
+				PrincipalId: "principal-1",
+				Scope:       "/subscriptions/sub-1",
+			},
+		},
+	}
+
+	out := marshalToMap(t, ra)
+
+	require.Equal(t, "SUB-1", out["subscriptionId"])
+	props := out["roleAssignment"].(map[string]any)["properties"].(map[string]any)
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+	require.Equal(t, "/SUBSCRIPTIONS/SUB-1", props["scope"])
+	require.Equal(t, "sub-1", ra.SubscriptionId)
+}
+
+func TestResourceGroupRoleAssignmentMarshalJSONUppercasesEndpoints(t *testing.T) {
+	ra := models.ResourceGroupRoleAssignment{
+		ResourceGroupId: "/subscriptions/s/resourcegroups/rg-1",
+		RoleAssignment: azure.RoleAssignment{
+			Properties: azure.RoleAssignmentPropertiesWithScope{
+				PrincipalId: "principal-1",
+				Scope:       "/subscriptions/s/resourcegroups/rg-1",
+			},
+		},
+	}
+
+	out := marshalToMap(t, ra)
+
+	require.Equal(t, "/SUBSCRIPTIONS/S/RESOURCEGROUPS/RG-1", out["resourceGroupId"])
+	props := out["roleAssignment"].(map[string]any)["properties"].(map[string]any)
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+	require.Equal(t, "/SUBSCRIPTIONS/S/RESOURCEGROUPS/RG-1", props["scope"])
+}
+
+func TestManagementGroupRoleAssignmentMarshalJSONUppercasesEndpoints(t *testing.T) {
+	ra := models.ManagementGroupRoleAssignment{
+		ManagementGroupId: "/providers/managementgroups/mg-1",
+		RoleAssignment: azure.RoleAssignment{
+			Properties: azure.RoleAssignmentPropertiesWithScope{
+				PrincipalId: "principal-1",
+				Scope:       "/providers/managementgroups/mg-1",
+			},
+		},
+	}
+
+	out := marshalToMap(t, ra)
+
+	require.Equal(t, "/PROVIDERS/MANAGEMENTGROUPS/MG-1", out["managementGroupId"])
+	props := out["roleAssignment"].(map[string]any)["properties"].(map[string]any)
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+	require.Equal(t, "/PROVIDERS/MANAGEMENTGROUPS/MG-1", props["scope"])
+}
+
+func TestVirtualMachineRoleAssignmentMarshalJSONUppercasesEndpoints(t *testing.T) {
+	ra := models.VirtualMachineRoleAssignment{
+		VirtualMachineId: "/subscriptions/s/resourcegroups/rg/providers/vm-1",
+		RoleAssignment: azure.RoleAssignment{
+			Properties: azure.RoleAssignmentPropertiesWithScope{
+				PrincipalId: "principal-1",
+				Scope:       "/subscriptions/s/resourcegroups/rg/providers/vm-1",
+			},
+		},
+	}
+
+	out := marshalToMap(t, ra)
+
+	require.Equal(t, "/SUBSCRIPTIONS/S/RESOURCEGROUPS/RG/PROVIDERS/VM-1", out["virtualMachineId"])
+	props := out["roleAssignment"].(map[string]any)["properties"].(map[string]any)
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+}
+
+func TestKeyVaultRoleAssignmentMarshalJSONUppercasesEndpoints(t *testing.T) {
+	ra := models.KeyVaultRoleAssignment{
+		KeyVaultId: "/subscriptions/s/kv-1",
+		RoleAssignment: azure.RoleAssignment{
+			Properties: azure.RoleAssignmentPropertiesWithScope{
+				PrincipalId: "principal-1",
+				Scope:       "/subscriptions/s/kv-1",
+			},
+		},
+	}
+
+	out := marshalToMap(t, ra)
+
+	// KeyVaultId serializes under the legacy "virtualMachineId" json tag.
+	require.Equal(t, "/SUBSCRIPTIONS/S/KV-1", out["virtualMachineId"])
+	props := out["roleAssignment"].(map[string]any)["properties"].(map[string]any)
+	require.Equal(t, "PRINCIPAL-1", props["principalId"])
+	require.Equal(t, "/SUBSCRIPTIONS/S/KV-1", props["scope"])
+}
+
 func TestDescendantInfoMarshalJSONUppercasesIds(t *testing.T) {
 	descendant := azure.DescendantInfo{
 		Id: "/providers/managementgroups/mg-child",

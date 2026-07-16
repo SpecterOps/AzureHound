@@ -17,11 +17,27 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type ManagementGroupRoleAssignment struct {
 	RoleAssignment    azure.RoleAssignment `json:"roleAssignment"`
 	ManagementGroupId string               `json:"managementGroupId"`
+}
+
+// MarshalJSON uppercases the ManagementGroupId and the RoleAssignment endpoint
+// identifiers so the raw (use_raw_object_id) ingest path matches the normalized
+// node ObjectIDs. The input is not mutated.
+func (s ManagementGroupRoleAssignment) MarshalJSON() ([]byte, error) {
+	type Alias ManagementGroupRoleAssignment
+	a := Alias(s)
+	a.ManagementGroupId = strings.ToUpper(a.ManagementGroupId)
+	a.RoleAssignment = UpperRoleAssignment(a.RoleAssignment)
+	return json.Marshal(a)
 }
 
 type ManagementGroupRoleAssignments struct {

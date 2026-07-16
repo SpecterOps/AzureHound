@@ -17,11 +17,27 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type VirtualMachineRoleAssignment struct {
 	RoleAssignment   azure.RoleAssignment `json:"roleAssignment"`
 	VirtualMachineId string               `json:"virtualMachineId"`
+}
+
+// MarshalJSON uppercases the VirtualMachineId and the RoleAssignment endpoint
+// identifiers so the raw (use_raw_object_id) ingest path matches the normalized
+// node ObjectIDs. The input is not mutated.
+func (s VirtualMachineRoleAssignment) MarshalJSON() ([]byte, error) {
+	type Alias VirtualMachineRoleAssignment
+	a := Alias(s)
+	a.VirtualMachineId = strings.ToUpper(a.VirtualMachineId)
+	a.RoleAssignment = UpperRoleAssignment(a.RoleAssignment)
+	return json.Marshal(a)
 }
 
 type VirtualMachineRoleAssignments struct {

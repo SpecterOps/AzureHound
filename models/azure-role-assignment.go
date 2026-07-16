@@ -17,12 +17,29 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type AzureRoleAssignment struct {
 	Assignee         azure.RoleAssignment `json:"assignee"`
 	ObjectId         string               `json:"objectId"`
 	RoleDefinitionId string               `json:"roleDefinitionId"`
+}
+
+// MarshalJSON uppercases the ObjectId and the Assignee endpoint identifiers so
+// the raw (use_raw_object_id) ingest path matches the normalized node ObjectIDs.
+// RoleDefinitionId is left untouched because ingest matches it against lowercase
+// role-definition constants. The input is not mutated.
+func (s AzureRoleAssignment) MarshalJSON() ([]byte, error) {
+	type Alias AzureRoleAssignment
+	a := Alias(s)
+	a.ObjectId = strings.ToUpper(a.ObjectId)
+	a.Assignee = UpperRoleAssignment(a.Assignee)
+	return json.Marshal(a)
 }
 
 type AzureRoleAssignments struct {
