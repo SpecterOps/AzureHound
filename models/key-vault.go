@@ -35,6 +35,7 @@ func (s KeyVault) MarshalJSON() ([]byte, error) {
 	type Alias KeyVault
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
 	a.ResourceGroup = strings.ToUpper(a.ResourceGroup)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)

@@ -34,8 +34,10 @@ type RoleEligibilityScheduleInstance struct {
 func (s RoleEligibilityScheduleInstance) MarshalJSON() ([]byte, error) {
 	type Alias RoleEligibilityScheduleInstance
 	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
 	a.RoleDefinitionId = strings.ToUpper(a.RoleDefinitionId)
 	a.PrincipalId = strings.ToUpper(a.PrincipalId)
+	a.DirectoryScopeId = strings.ToUpper(a.DirectoryScopeId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)
 }

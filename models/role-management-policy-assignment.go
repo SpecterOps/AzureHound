@@ -42,6 +42,7 @@ type RoleManagementPolicyAssignment struct {
 func (s RoleManagementPolicyAssignment) MarshalJSON() ([]byte, error) {
 	type Alias RoleManagementPolicyAssignment
 	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
 	a.RoleDefinitionId = strings.ToUpper(a.RoleDefinitionId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	a.EndUserAssignmentUserApprovers = upperStrings(a.EndUserAssignmentUserApprovers)

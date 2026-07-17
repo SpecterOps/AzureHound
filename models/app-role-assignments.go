@@ -43,12 +43,13 @@ func (s AppRoleAssignment) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	var output map[string]any
+	var output map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &output); err != nil {
 		return nil, err
 	}
 	if _, ok := output["principalId"]; ok {
-		output["principalId"] = strings.ToUpper(s.PrincipalId.String())
+		pid := strings.ToUpper(s.PrincipalId.String())
+		output["principalId"], _ = json.Marshal(pid)
 	}
 	return json.Marshal(output)
 }

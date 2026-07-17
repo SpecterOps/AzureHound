@@ -33,6 +33,8 @@ func (s KeyVaultAccessPolicy) MarshalJSON() ([]byte, error) {
 	type Alias KeyVaultAccessPolicy
 	a := Alias(s)
 	a.ObjectId = strings.ToUpper(a.ObjectId)
+	a.ApplicationId = strings.ToUpper(a.ApplicationId)
+	a.TenantId = strings.ToUpper(a.TenantId)
 	a.KeyVaultId = strings.ToUpper(a.KeyVaultId)
 	return json.Marshal(a)
 }

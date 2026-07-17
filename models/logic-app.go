@@ -36,6 +36,7 @@ func (s LogicApp) MarshalJSON() ([]byte, error) {
 	type Alias LogicApp
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
 	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	a.Identity = UpperManagedIdentity(a.Identity)
