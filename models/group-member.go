@@ -27,16 +27,26 @@ type GroupMember struct {
 	GroupId string          `json:"groupId"`
 }
 
+// MarshalJSON uppercases the GroupId and the embedded member.id so the raw
+// (use_raw_object_id) ingest path matches the normalized node ObjectIDs. When
+// member is empty or nil it is emitted as null rather than passed to
+// OmitEmptyUpper, which would fail to unmarshal an empty raw message. The input
+// is not mutated.
 func (s GroupMember) MarshalJSON() ([]byte, error) {
-	output := make(map[string]any)
-	output["groupId"] = strings.ToUpper(s.GroupId)
+	type Alias GroupMember
+	a := Alias(s)
+	a.GroupId = strings.ToUpper(a.GroupId)
 
-	if member, err := OmitEmptyUpper(s.Member, "id"); err != nil {
-		return nil, err
+	if len(a.Member) > 0 {
+		member, err := OmitEmptyUpper(a.Member, "id")
+		if err != nil {
+			return nil, err
+		}
+		a.Member = member
 	} else {
-		output["member"] = member
-		return json.Marshal(output)
+		a.Member = nil
 	}
+	return json.Marshal(a)
 }
 
 type GroupMembers struct {

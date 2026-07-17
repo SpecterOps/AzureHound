@@ -32,21 +32,24 @@ type AppFIC struct {
 // BloodHound ingest reads fic.id as the AZFederatedIdentityCredential node
 // ObjectID and AZAuthenticatesTo source, and AppId as the AZApp endpoint. The
 // remaining fic fields (issuer, subject, name, audiences) are display-only and
-// are left untouched. The input is not mutated.
+// are left untouched. The input is not mutated. When fic is empty or nil it is
+// emitted as null rather than passed to OmitEmptyUpper, which would fail to
+// unmarshal an empty raw message.
 func (s *AppFIC) MarshalJSON() ([]byte, error) {
-	output := make(map[string]any)
-	output["appId"] = strings.ToUpper(s.AppId)
+	type Alias AppFIC
+	a := Alias(*s)
+	a.AppId = strings.ToUpper(a.AppId)
 
-	if s.FIC == nil {
-		return nil, nil
-	}
-
-	if fic, err := OmitEmptyUpper(s.FIC, "id"); err != nil {
-		return nil, err
+	if len(a.FIC) > 0 {
+		fic, err := OmitEmptyUpper(a.FIC, "id")
+		if err != nil {
+			return nil, err
+		}
+		a.FIC = fic
 	} else {
-		output["fic"] = fic
-		return json.Marshal(output)
+		a.FIC = nil
 	}
+	return json.Marshal(a)
 }
 
 type AppFICs struct {

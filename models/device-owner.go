@@ -27,16 +27,26 @@ type DeviceOwner struct {
 	DeviceId string          `json:"deviceId"`
 }
 
+// MarshalJSON uppercases the DeviceId and the embedded owner.id so the raw
+// (use_raw_object_id) ingest path matches the normalized node ObjectIDs. When
+// owner is empty or nil it is emitted as null rather than passed to
+// OmitEmptyUpper, which would fail to unmarshal an empty raw message. The input
+// is not mutated.
 func (s DeviceOwner) MarshalJSON() ([]byte, error) {
-	output := make(map[string]any)
-	output["deviceId"] = strings.ToUpper(s.DeviceId)
+	type Alias DeviceOwner
+	a := Alias(s)
+	a.DeviceId = strings.ToUpper(a.DeviceId)
 
-	if owner, err := OmitEmptyUpper(s.Owner, "id"); err != nil {
-		return nil, err
+	if len(a.Owner) > 0 {
+		owner, err := OmitEmptyUpper(a.Owner, "id")
+		if err != nil {
+			return nil, err
+		}
+		a.Owner = owner
 	} else {
-		output["owner"] = owner
-		return json.Marshal(output)
+		a.Owner = nil
 	}
+	return json.Marshal(a)
 }
 
 type DeviceOwners struct {
