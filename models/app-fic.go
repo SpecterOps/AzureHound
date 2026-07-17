@@ -27,14 +27,9 @@ type AppFIC struct {
 	AppId string          `json:"appId"`
 }
 
-// MarshalJSON uppercases the AppId and the embedded fic.id so the raw
-// (use_raw_object_id) ingest path matches the normalized node ObjectIDs.
-// BloodHound ingest reads fic.id as the AZFederatedIdentityCredential node
-// ObjectID and AZAuthenticatesTo source, and AppId as the AZApp endpoint. The
-// remaining fic fields (issuer, subject, name, audiences) are display-only and
-// are left untouched. The input is not mutated. When fic is empty or nil it is
-// emitted as null rather than passed to OmitEmptyUpper, which would fail to
-// unmarshal an empty raw message.
+// MarshalJSON uppercases AppId and the embedded fic.id for raw
+// (use_raw_object_id) ingest; display-only fic fields are untouched. An empty
+// or nil fic is emitted as null to avoid unmarshaling it. Non-mutating.
 func (s *AppFIC) MarshalJSON() ([]byte, error) {
 	type Alias AppFIC
 	a := Alias(*s)

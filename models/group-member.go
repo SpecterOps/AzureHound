@@ -27,11 +27,9 @@ type GroupMember struct {
 	GroupId string          `json:"groupId"`
 }
 
-// MarshalJSON uppercases the GroupId and the embedded member.id so the raw
-// (use_raw_object_id) ingest path matches the normalized node ObjectIDs. When
-// member is empty or nil it is emitted as null rather than passed to
-// OmitEmptyUpper, which would fail to unmarshal an empty raw message. The input
-// is not mutated.
+// MarshalJSON uppercases GroupId and the embedded member.id for raw
+// (use_raw_object_id) ingest. An empty or nil member is emitted as null to
+// avoid unmarshaling it. Non-mutating.
 func (s GroupMember) MarshalJSON() ([]byte, error) {
 	type Alias GroupMember
 	a := Alias(s)
