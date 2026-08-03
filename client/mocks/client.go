@@ -324,6 +324,20 @@ func (mr *MockAzureClientMockRecorder) ListAzureDevices(ctx, params any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureDevices", reflect.TypeOf((*MockAzureClient)(nil).ListAzureDevices), ctx, params)
 }
 
+// ListAzureDomainServices mocks base method.
+func (m *MockAzureClient) ListAzureDomainServices(ctx context.Context, subscriptionId string) <-chan client.AzureResult[azure.DomainService] {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAzureDomainServices", ctx, subscriptionId)
+	ret0, _ := ret[0].(<-chan client.AzureResult[azure.DomainService])
+	return ret0
+}
+
+// ListAzureDomainServices indicates an expected call of ListAzureDomainServices.
+func (mr *MockAzureClientMockRecorder) ListAzureDomainServices(ctx, subscriptionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAzureDomainServices", reflect.TypeOf((*MockAzureClient)(nil).ListAzureDomainServices), ctx, subscriptionId)
+}
+
 // ListAzureFunctionApps mocks base method.
 func (m *MockAzureClient) ListAzureFunctionApps(ctx context.Context, subscriptionId string) <-chan client.AzureResult[azure.FunctionApp] {
 	m.ctrl.T.Helper()
