@@ -38,5 +38,7 @@ func (s ManagedCluster) MarshalJSON() ([]byte, error) {
 	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
 	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.Properties.NodeResourceGroup = strings.ToUpper(a.Properties.NodeResourceGroup)
+	a.Identity = UpperManagedIdentity(a.Identity)
 	return json.Marshal(a)
 }

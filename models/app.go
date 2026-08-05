@@ -35,6 +35,8 @@ func (s App) MarshalJSON() ([]byte, error) {
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
 	a.AppId = strings.ToUpper(a.AppId)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.TenantName = strings.ToUpper(a.TenantName)
 	return json.Marshal(a)
 }

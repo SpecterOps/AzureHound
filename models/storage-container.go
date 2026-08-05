@@ -17,7 +17,12 @@
 
 package models
 
-import "github.com/bloodhoundad/azurehound/v2/models/azure"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/bloodhoundad/azurehound/v2/models/azure"
+)
 
 type StorageContainer struct {
 	azure.StorageContainer
@@ -26,4 +31,16 @@ type StorageContainer struct {
 	ResourceGroupName string `json:"resourceGroupName"`
 	StorageAccountId  string `json:"storageAccountId"`
 	TenantId          string `json:"tenantId"`
+}
+
+func (s StorageContainer) MarshalJSON() ([]byte, error) {
+	type Alias StorageContainer
+	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
+	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.ResourceGroupName = strings.ToUpper(a.ResourceGroupName)
+	a.StorageAccountId = strings.ToUpper(a.StorageAccountId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	return json.Marshal(a)
 }

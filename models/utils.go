@@ -33,11 +33,12 @@ func UpperRoleAssignment(assignment azure.RoleAssignment) azure.RoleAssignment {
 }
 
 // UpperManagedIdentity returns a copy of the provided ManagedIdentity with the
-// system-assigned PrincipalId and each user-assigned identity PrincipalId
-// uppercased. The input is not mutated: the UserAssignedIdentities map is
-// rebuilt into a fresh map.
+// system-assigned PrincipalId, TenantId, and each user-assigned identity
+// PrincipalId uppercased. The input is not mutated: the UserAssignedIdentities
+// map is rebuilt into a fresh map.
 func UpperManagedIdentity(identity azure.ManagedIdentity) azure.ManagedIdentity {
 	identity.PrincipalId = strings.ToUpper(identity.PrincipalId)
+	identity.TenantId = strings.ToUpper(identity.TenantId)
 	if identity.UserAssignedIdentities != nil {
 		uais := make(map[string]azure.UserAssignedIdentity, len(identity.UserAssignedIdentities))
 		for key, uai := range identity.UserAssignedIdentities {
