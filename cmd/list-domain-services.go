@@ -104,7 +104,7 @@ func listDomainServices(ctx context.Context, azureClient client.AzureClient, sub
 					log.V(2).Info("found domain service", "name", domainService.Name)
 					count++
 					if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
-						Kind: enums.KindAZDomainService,
+						Kind: enums.KindAZEntraDS,
 						Data: domainService,
 					}); !ok {
 						return

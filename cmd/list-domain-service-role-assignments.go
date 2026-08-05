@@ -115,7 +115,7 @@ func listDomainServiceRoleAssignments(ctx context.Context, azureClient client.Az
 					count++
 				}
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
-					Kind: enums.KindAZDomainServiceRoleAssignment,
+					Kind: enums.KindAZEntraDSRoleAssignment,
 					Data: roleAssignments,
 				}); !ok {
 					return
