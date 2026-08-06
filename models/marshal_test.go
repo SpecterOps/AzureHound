@@ -638,3 +638,99 @@ func TestStorageContainerMarshalJSONUppercasesIdentifiers(t *testing.T) {
 	// Source is unchanged.
 	require.Equal(t, "sub-1", sc.SubscriptionId)
 }
+
+func TestRoleAssignmentsMarshalJSONUppercasesInnerEndpoints(t *testing.T) {
+	ra := models.RoleAssignments{
+		RoleDefinitionId: "role-def-1",
+		TenantId:         "tenant-abc",
+		RoleAssignments: []azure.UnifiedRoleAssignment{
+			{
+				RoleDefinitionId: "role-def-1",
+				PrincipalId:      "principal-1",
+				DirectoryScopeId: "/administrativeUnits/au-1",
+			},
+		},
+	}
+	// The assignment id is a case-sensitive base64url Graph identifier.
+	ra.RoleAssignments[0].Id = "lAPPGGoDgkmB_Xyz-123"
+
+	out := marshalToMap(t, ra)
+
+	require.Equal(t, "ROLE-DEF-1", out["roleDefinitionId"])
+	require.Equal(t, "TENANT-ABC", out["tenantId"])
+	entry := out["roleAssignments"].([]any)[0].(map[string]any)
+	// The per-assignment id is base64url and must be preserved as-is.
+	require.Equal(t, "lAPPGGoDgkmB_Xyz-123", entry["id"])
+	require.Equal(t, "ROLE-DEF-1", entry["roleDefinitionId"])
+	require.Equal(t, "PRINCIPAL-1", entry["principalId"])
+	require.Equal(t, "/ADMINISTRATIVEUNITS/AU-1", entry["directoryScopeId"])
+	// Source is unchanged.
+	require.Equal(t, "role-def-1", ra.RoleAssignments[0].RoleDefinitionId)
+	require.Equal(t, "principal-1", ra.RoleAssignments[0].PrincipalId)
+}
+
+func TestKeyVaultMarshalJSONUppercasesAccessPolicies(t *testing.T) {
+	kv := models.KeyVault{
+		SubscriptionId: "sub-1",
+		ResourceGroup:  "rg-1",
+		TenantId:       "tenant-abc",
+	}
+	kv.Id = "/subscriptions/sub-1/resourcegroups/rg-1/providers/kv-1"
+	kv.Properties.AccessPolicies = []azure.AccessPolicyEntry{
+		{
+			ObjectId:      "object-1",
+			ApplicationId: "app-1",
+			TenantId:      "tenant-abc",
+		},
+	}
+
+	out := marshalToMap(t, kv)
+
+	props := out["properties"].(map[string]any)
+	policy := props["accessPolicies"].([]any)[0].(map[string]any)
+	require.Equal(t, "OBJECT-1", policy["objectId"])
+	require.Equal(t, "APP-1", policy["applicationId"])
+	require.Equal(t, "TENANT-ABC", policy["tenantId"])
+	// Source is unchanged.
+	require.Equal(t, "object-1", kv.Properties.AccessPolicies[0].ObjectId)
+	require.Equal(t, "app-1", kv.Properties.AccessPolicies[0].ApplicationId)
+}
+
+func TestRoleManagementPolicyAssignmentMarshalJSONUppercasesApproverIds(t *testing.T) {
+	rule := `{
+		"@odata.type": "#microsoft.graph.unifiedRoleManagementPolicyApprovalRule",
+		"setting": {
+			"approvalStages": [
+				{
+					"primaryApprovers": [
+						{"@odata.type": "#microsoft.graph.groupMembers", "groupId": "group-1"},
+						{"@odata.type": "#microsoft.graph.singleUser", "userId": "user-1"}
+					]
+				}
+			]
+		}
+	}`
+	rmpa := models.RoleManagementPolicyAssignment{
+		Id:                              "policy-assignment-1",
+		RoleDefinitionId:                "role-def-1",
+		TenantId:                        "tenant-abc",
+		EndUserAssignmentGroupApprovers: []string{"group-1"},
+	}
+	rmpa.Policy.Rules = []json.RawMessage{json.RawMessage(rule)}
+
+	out := marshalToMap(t, rmpa)
+
+	require.Equal(t, "POLICY-ASSIGNMENT-1", out["id"])
+	require.Equal(t, "ROLE-DEF-1", out["roleDefinitionId"])
+	require.Equal(t, "GROUP-1", out["endUserAssignmentGroupApprovers"].([]any)[0])
+
+	// Approver ids nested in the raw policy rules are uppercased.
+	rules := out["policy"].(map[string]any)["rules"].([]any)
+	setting := rules[0].(map[string]any)["setting"].(map[string]any)
+	stage := setting["approvalStages"].([]any)[0].(map[string]any)
+	approvers := stage["primaryApprovers"].([]any)
+	require.Equal(t, "GROUP-1", approvers[0].(map[string]any)["groupId"])
+	require.Equal(t, "USER-1", approvers[1].(map[string]any)["userId"])
+	// Source is unchanged.
+	require.Contains(t, string(rmpa.Policy.Rules[0]), "group-1")
+}

@@ -79,6 +79,51 @@ func OmitEmptyUpper(raw json.RawMessage, keys ...string) (json.RawMessage, error
 	}
 }
 
+// targetKeys is the set of JSON field names whose string values to uppercase.
+type targetKeys map[string]bool
+
+// upperDecodedKeys recursively uppercases targeted string fields in a decoded
+// JSON value, walking objects and arrays and leaving other values untouched.
+func upperDecodedKeys(value any, targeted targetKeys) any {
+	switch node := value.(type) {
+	case map[string]any:
+		for key, child := range node {
+			childStr, isString := child.(string)
+			if targeted[key] && isString {
+				node[key] = strings.ToUpper(childStr)
+			} else {
+				node[key] = upperDecodedKeys(child, targeted)
+			}
+		}
+		return node
+	case []any:
+		for i, child := range node {
+			node[i] = upperDecodedKeys(child, targeted)
+		}
+		return node
+	default:
+		return value
+	}
+}
+
+// UpperRawJSONKeys returns a copy of raw with the string values under any of the
+// named keys uppercased at any depth. Empty input is returned unchanged and the
+// input is not mutated.
+func UpperRawJSONKeys(raw json.RawMessage, keys ...string) (json.RawMessage, error) {
+	if len(raw) == 0 {
+		return raw, nil
+	}
+	var decoded any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		return nil, err
+	}
+	targeted := make(targetKeys, len(keys))
+	for _, key := range keys {
+		targeted[key] = true
+	}
+	return json.Marshal(upperDecodedKeys(decoded, targeted))
+}
+
 func StripEmptyEntries(data map[string]any) {
 	for key, value := range data {
 		if isEmpty(reflect.ValueOf(value)) {
