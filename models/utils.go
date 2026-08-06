@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"strings"
@@ -114,7 +115,9 @@ func UpperRawJSONKeys(raw json.RawMessage, keys ...string) (json.RawMessage, err
 		return raw, nil
 	}
 	var decoded any
-	if err := json.Unmarshal(raw, &decoded); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(&decoded); err != nil {
 		return nil, err
 	}
 	targeted := make(targetKeys, len(keys))
