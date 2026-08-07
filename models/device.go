@@ -34,6 +34,9 @@ func (s Device) MarshalJSON() ([]byte, error) {
 	type Alias Device
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.DeviceId = strings.ToUpper(a.DeviceId)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.TenantName = strings.ToUpper(a.TenantName)
 	return json.Marshal(a)
 }

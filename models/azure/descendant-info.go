@@ -71,5 +71,6 @@ func (s DescendantInfo) MarshalJSON() ([]byte, error) {
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
 	a.Properties.Parent.Id = strings.ToUpper(a.Properties.Parent.Id)
+	a.Properties.DisplayName = strings.ToUpper(a.Properties.DisplayName)
 	return json.Marshal(a)
 }

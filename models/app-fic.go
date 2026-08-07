@@ -54,6 +54,17 @@ type AppFICs struct {
 	TenantName string   `json:"tenantName"`
 }
 
+// MarshalJSON uppercases the AppId, TenantId, and TenantName identifiers; each
+// FIC entry is marshaled through its own MarshalJSON. Non-mutating.
+func (s AppFICs) MarshalJSON() ([]byte, error) {
+	type Alias AppFICs
+	a := Alias(s)
+	a.AppId = strings.ToUpper(a.AppId)
+	a.TenantId = strings.ToUpper(a.TenantId)
+	a.TenantName = strings.ToUpper(a.TenantName)
+	return json.Marshal(a)
+}
+
 type FICData struct {
 	Audiences   []string `json:"audiences"`
 	ID          string   `json:"id"`

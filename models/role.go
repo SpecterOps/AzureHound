@@ -34,6 +34,8 @@ func (s Role) MarshalJSON() ([]byte, error) {
 	type Alias Role
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.TenantName = strings.ToUpper(a.TenantName)
 	return json.Marshal(a)
 }

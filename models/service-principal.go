@@ -36,6 +36,8 @@ func (s ServicePrincipal) MarshalJSON() ([]byte, error) {
 	a.Id = strings.ToUpper(a.Id)
 	a.AppId = strings.ToUpper(a.AppId)
 	a.AppOwnerOrganizationId = strings.ToUpper(a.AppOwnerOrganizationId)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.TenantName = strings.ToUpper(a.TenantName)
 	return json.Marshal(a)
 }

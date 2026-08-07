@@ -38,6 +38,7 @@ func (s LogicApp) MarshalJSON() ([]byte, error) {
 	a.Id = strings.ToUpper(a.Id)
 	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
 	a.ResourceGroupId = strings.ToUpper(a.ResourceGroupId)
+	a.ResourceGroupName = strings.ToUpper(a.ResourceGroupName)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	a.Identity = UpperManagedIdentity(a.Identity)
 	return json.Marshal(a)
