@@ -24,6 +24,7 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/client"
 	"github.com/bloodhoundad/azurehound/v2/client/mocks"
 	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/bloodhoundad/azurehound/v2/models/azure"
 	"go.uber.org/mock/gomock"
@@ -71,6 +72,9 @@ func TestListDomainServiceRoleAssignments(t *testing.T) {
 	wrapper, ok := result.(AzureWrapper)
 	if !ok {
 		t.Fatalf("failed type assertion: got %T, want %T", result, AzureWrapper{})
+	}
+	if wrapper.Kind != enums.KindAZEntraDSRoleAssignment {
+		t.Errorf("unexpected kind: %s", wrapper.Kind)
 	}
 	roleAssignments, ok := wrapper.Data.(models.AzureRoleAssignments)
 	if !ok {
