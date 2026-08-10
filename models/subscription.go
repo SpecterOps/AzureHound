@@ -33,6 +33,8 @@ func (s Subscription) MarshalJSON() ([]byte, error) {
 	type Alias Subscription
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)
 }

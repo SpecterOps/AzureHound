@@ -39,6 +39,7 @@ func (s RoleAssignments) MarshalJSON() ([]byte, error) {
 	if s.RoleAssignments != nil {
 		assignments := make([]azure.UnifiedRoleAssignment, len(s.RoleAssignments))
 		for i, assignment := range s.RoleAssignments {
+			assignment.RoleDefinitionId = strings.ToUpper(assignment.RoleDefinitionId)
 			assignment.PrincipalId = strings.ToUpper(assignment.PrincipalId)
 			assignment.DirectoryScopeId = strings.ToUpper(assignment.DirectoryScopeId)
 			if len(assignment.Principal) > 0 {

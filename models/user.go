@@ -36,5 +36,7 @@ func (s User) MarshalJSON() ([]byte, error) {
 	a.Id = strings.ToUpper(a.Id)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	a.OnPremisesSecurityIdentifier = strings.ToUpper(a.OnPremisesSecurityIdentifier)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
+	a.TenantName = strings.ToUpper(a.TenantName)
 	return json.Marshal(a)
 }

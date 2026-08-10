@@ -32,6 +32,8 @@ type Tenant struct {
 func (s Tenant) MarshalJSON() ([]byte, error) {
 	type Alias Tenant
 	a := Alias(s)
+	a.Id = strings.ToUpper(a.Id)
+	a.DisplayName = strings.ToUpper(a.DisplayName)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)
 }

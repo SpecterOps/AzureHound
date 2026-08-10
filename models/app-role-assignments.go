@@ -34,6 +34,7 @@ func (s AppRoleAssignment) MarshalJSON() ([]byte, error) {
 	type Alias AppRoleAssignment
 	a := Alias(s)
 	a.ResourceId = strings.ToUpper(a.ResourceId)
+	a.AppId = strings.ToUpper(a.AppId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 
 	// PrincipalId is a uuid.UUID and cannot hold an uppercased string, so emit

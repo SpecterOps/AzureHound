@@ -38,5 +38,16 @@ func (s KeyVault) MarshalJSON() ([]byte, error) {
 	a.SubscriptionId = strings.ToUpper(a.SubscriptionId)
 	a.ResourceGroup = strings.ToUpper(a.ResourceGroup)
 	a.TenantId = strings.ToUpper(a.TenantId)
+	a.Properties.TenantId = strings.ToUpper(a.Properties.TenantId)
+	if s.Properties.AccessPolicies != nil {
+		policies := make([]azure.AccessPolicyEntry, len(s.Properties.AccessPolicies))
+		for i, policy := range s.Properties.AccessPolicies {
+			policy.ObjectId = strings.ToUpper(policy.ObjectId)
+			policy.ApplicationId = strings.ToUpper(policy.ApplicationId)
+			policy.TenantId = strings.ToUpper(policy.TenantId)
+			policies[i] = policy
+		}
+		a.Properties.AccessPolicies = policies
+	}
 	return json.Marshal(a)
 }

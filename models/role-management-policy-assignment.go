@@ -47,5 +47,18 @@ func (s RoleManagementPolicyAssignment) MarshalJSON() ([]byte, error) {
 	a.TenantId = strings.ToUpper(a.TenantId)
 	a.EndUserAssignmentUserApprovers = upperStrings(a.EndUserAssignmentUserApprovers)
 	a.EndUserAssignmentGroupApprovers = upperStrings(a.EndUserAssignmentGroupApprovers)
+
+	// Uppercase approver groupId/userId nested in the raw policy rules.
+	if s.Policy.Rules != nil {
+		rules := make([]json.RawMessage, len(s.Policy.Rules))
+		for i, rule := range s.Policy.Rules {
+			if upper, err := UpperRawJSONKeys(rule, "groupId", "userId"); err != nil {
+				return nil, err
+			} else {
+				rules[i] = upper
+			}
+		}
+		a.Policy.Rules = rules
+	}
 	return json.Marshal(a)
 }

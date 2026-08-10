@@ -33,6 +33,8 @@ func (s ManagementGroup) MarshalJSON() ([]byte, error) {
 	type Alias ManagementGroup
 	a := Alias(s)
 	a.Id = strings.ToUpper(a.Id)
+	a.Properties.DisplayName = strings.ToUpper(a.Properties.DisplayName)
+	a.Properties.TenantId = strings.ToUpper(a.Properties.TenantId)
 	a.TenantId = strings.ToUpper(a.TenantId)
 	return json.Marshal(a)
 }
