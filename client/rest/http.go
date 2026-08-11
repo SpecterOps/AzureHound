@@ -129,12 +129,17 @@ func NewRequest(
 		}
 
 		// set azurehound as user-agent, use custom if set in config
-		ua := config.UserAgent.Value()
-		if s, ok := ua.(string); ok && s != "" {
-			req.Header.Set("User-Agent", s)
-		} else {
-			req.Header.Set("User-Agent", constants.UserAgent())
-		}
+		req.Header.Set("User-Agent", UserAgent())
 		return req, nil
 	}
+}
+
+// UserAgent returns the configured User-Agent header value, falling back to
+// the default azurehound/<version> string when the --user-agent flag is unset
+// or empty.
+func UserAgent() string {
+	if s, ok := config.UserAgent.Value().(string); ok && s != "" {
+		return s
+	}
+	return constants.UserAgent()
 }
