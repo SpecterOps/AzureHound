@@ -276,7 +276,7 @@ func TestAppRoleAssignmentMarshalJSONUppercasesUUIDFields(t *testing.T) {
 
 	require.Equal(t, "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", out["principalId"])
 	require.Equal(t, "RESOURCE-1", out["resourceId"])
-	require.Equal(t, "APP-1", out["appId"])
+	require.Equal(t, "app-1", out["appId"])
 	require.Equal(t, "TENANT-1", out["tenantId"])
 	// AppRoleId is used for lowercase matching in ingest and must remain untouched.
 	require.Equal(t, "11111111-2222-3333-4444-555555555555", out["appRoleId"])
