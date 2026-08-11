@@ -27,6 +27,7 @@ import (
 type Tenant struct {
 	azure.Tenant
 	Collected bool `json:"collected,omitempty"`
+	External  bool `json:"external,omitempty"`
 }
 
 func (s Tenant) MarshalJSON() ([]byte, error) {
