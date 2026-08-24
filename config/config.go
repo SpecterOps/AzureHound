@@ -69,6 +69,12 @@ func SystemConfigDirs() []string {
 
 const EnvPrefix string = "AZUREHOUND"
 
+const (
+	DefaultLogMaxSize    = 100
+	DefaultLogMaxAge     = 14
+	DefaultLogMaxBackups = 20
+)
+
 var AzRegions = []string{
 	constants.China,
 	constants.Cloud,
@@ -117,6 +123,37 @@ var (
 		Usage:      "Output logs to this file",
 		Persistent: true,
 		Default:    "",
+	}
+	LogMaxSize = Config{
+		Name:       "log-max-size",
+		Shorthand:  "",
+		Usage:      fmt.Sprintf("Maximum active log size in MiB before rotation (default: %d)", DefaultLogMaxSize),
+		Persistent: true,
+		Default:    DefaultLogMaxSize,
+		MinValue:   1,
+	}
+	LogMaxAge = Config{
+		Name:       "log-max-age",
+		Shorthand:  "",
+		Usage:      fmt.Sprintf("Maximum age in days for rotated logs (default: %d; 0 disables age pruning)", DefaultLogMaxAge),
+		Persistent: true,
+		Default:    DefaultLogMaxAge,
+		MinValue:   0,
+	}
+	LogMaxBackups = Config{
+		Name:       "log-max-backups",
+		Shorthand:  "",
+		Usage:      fmt.Sprintf("Maximum number of rotated logs to retain (default: %d; 0 disables count pruning)", DefaultLogMaxBackups),
+		Persistent: true,
+		Default:    DefaultLogMaxBackups,
+		MinValue:   0,
+	}
+	LogCompress = Config{
+		Name:       "log-compress",
+		Shorthand:  "",
+		Usage:      "Compress rotated logs with gzip (default: true)",
+		Persistent: true,
+		Default:    true,
 	}
 	Proxy = Config{
 		Name:       "proxy",
@@ -368,6 +405,10 @@ var (
 		JsonLogs,
 		JWT,
 		LogFile,
+		LogMaxSize,
+		LogMaxAge,
+		LogMaxBackups,
+		LogCompress,
 		Proxy,
 		RefreshToken,
 		Pprof,

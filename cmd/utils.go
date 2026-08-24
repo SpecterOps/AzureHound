@@ -61,6 +61,9 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 
 	config.LoadValues(cmd, config.Options())
 	config.SetAzureDefaults()
+	if err := config.ValidateLoggingConfig(); err != nil {
+		return fmt.Errorf("invalid logging configuration: %w", err)
+	}
 
 	if logr, err := logger.GetLogger(); err != nil {
 		return err
