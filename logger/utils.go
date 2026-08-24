@@ -19,10 +19,10 @@ package logger
 
 import (
 	"io"
-	"os"
 
 	"github.com/bloodhoundad/azurehound/v2/config"
 	"github.com/go-logr/logr"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -30,15 +30,22 @@ var (
 	fileLogWriter io.Writer
 )
 
-func getFileLogLevelWriter() io.Writer {
+func getFileLogLevelWriter() (io.Writer, error) {
 	if fileLogWriter != nil {
-		return fileLogWriter
+		return fileLogWriter, nil
+	} else if err := config.ValidateLoggingConfig(); err != nil {
+		return nil, err
 	} else if logfile, ok := config.LogFile.Value().(string); !ok || logfile == "" {
-		return nil
-	} else if file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
-		return nil
+		return nil, nil
 	} else {
-		return file
+		fileLogWriter = &lumberjack.Logger{
+			Filename:   logfile,
+			MaxSize:    config.LogMaxSize.Value().(int),
+			MaxAge:     config.LogMaxAge.Value().(int),
+			MaxBackups: config.LogMaxBackups.Value().(int),
+			Compress:   config.LogCompress.Value().(bool),
+		}
+		return fileLogWriter, nil
 	}
 }
 

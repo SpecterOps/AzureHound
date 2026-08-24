@@ -48,7 +48,9 @@ func setupLogger() (*logr.Logger, error) {
 	}
 
 	// emit logs to file if configured
-	if fileLogWriter := getFileLogLevelWriter(); fileLogWriter != nil {
+	if fileLogWriter, err := getFileLogLevelWriter(); err != nil {
+		return nil, err
+	} else if fileLogWriter != nil {
 		options.Writers = append(options.Writers, fileLogWriter)
 	}
 
