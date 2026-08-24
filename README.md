@@ -94,7 +94,11 @@ Flags:
   -h, --help                   help for azurehound
       --json                   Output logs as json
   -j, --jwt string             Use an acquired JWT to authenticate into Azure
+      --log-compress           Compress rotated logs with gzip (default: true)
       --log-file string        Output logs to this file
+      --log-max-age int        Maximum age in days for rotated logs (default: 14; 0 disables age pruning)
+      --log-max-backups int    Maximum number of rotated logs to retain (default: 20; 0 disables count pruning)
+      --log-max-size int       Maximum active log size in MiB before rotation (default: 100)
       --proxy string           Sets the proxy URL for the AzureHound service
   -r, --refresh-token string   Use an acquired refresh token to authenticate into Azure
   -v, --verbosity int          AzureHound verbosity level (defaults to 0) [Min: -1, Max: 2]
@@ -102,3 +106,9 @@ Flags:
 
 Use "azurehound [command] --help" for more information about a command.
 ```
+
+### Log file management
+
+When `--log-file` is configured, AzureHound rotates the active log when it reaches `--log-max-size`. Rotated logs are timestamped, stored beside the active log, and compressed with gzip by default.
+
+Archives are retained for at most `--log-max-age` days and are also limited by `--log-max-backups`. Setting either retention option to `0` disables that individual limit. The defaults retain no more than 20 archives or 14 days of history. Only one AzureHound process should write to a given log file.
