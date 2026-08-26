@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -81,6 +82,44 @@ func TestGetLoggerRejectsDirectoryLogPath(t *testing.T) {
 	}
 	if fileLogWriter != nil {
 		t.Fatalf("file log writer was created for a directory: %T", fileLogWriter)
+	}
+}
+
+func TestGetLoggerRejectsInaccessibleLogFile(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("file modes do not reliably prevent writes on Windows")
+	}
+
+	logPath := filepath.Join(t.TempDir(), "azurehound.log")
+	if err := os.WriteFile(logPath, nil, 0400); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(logPath, 0600)
+
+	if file, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY, 0); err == nil {
+		_ = file.Close()
+		t.Skip("test requires write permissions to be enforced")
+	}
+
+	restore := setFileLoggingConfig(logPath)
+	defer restore()
+
+	if _, err := GetLogger(); err == nil {
+		t.Fatal("expected logger setup to reject an inaccessible log file")
+	}
+
+	fileInfo, err := os.Stat(logPath)
+	if err != nil {
+		t.Fatalf("stat log file: %v", err)
+	}
+	if !fileInfo.Mode().IsRegular() {
+		t.Fatalf("log path was changed from a regular file: mode = %v", fileInfo.Mode())
+	}
+	if fileLogWriter != nil {
+		t.Fatalf("file log writer was created for an inaccessible file: %T", fileLogWriter)
+	}
+	if log != nil {
+		t.Fatal("logger was cached for an inaccessible log file")
 	}
 }
 

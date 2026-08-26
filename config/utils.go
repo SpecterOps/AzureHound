@@ -67,6 +67,12 @@ func ValidateLoggingConfig() error {
 		return fmt.Errorf("%s must reference a file, not a directory: %q", LogFile.Name, logFile)
 	} else if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("could not inspect %s %q: %w", LogFile.Name, logFile, err)
+	} else if err == nil && fileInfo.Mode().IsRegular() {
+		if file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0); err != nil {
+			return fmt.Errorf("could not open %s %q for writing: %w", LogFile.Name, logFile, err)
+		} else if err := file.Close(); err != nil {
+			return fmt.Errorf("could not close %s %q after validating write access: %w", LogFile.Name, logFile, err)
+		}
 	}
 
 	if value := LogMaxSize.Value().(int); value < LogMaxSize.MinValue {
