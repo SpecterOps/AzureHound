@@ -94,7 +94,11 @@ func TestGetLoggerRejectsInaccessibleLogFile(t *testing.T) {
 	if err := os.WriteFile(logPath, nil, 0400); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chmod(logPath, 0600)
+	defer func() {
+		if err := os.Chmod(logPath, 0600); err != nil {
+			t.Errorf("restore log file permissions: %v", err)
+		}
+	}()
 
 	if file, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY, 0); err == nil {
 		_ = file.Close()
