@@ -27,6 +27,7 @@ import (
 
 	"github.com/bloodhoundad/azurehound/v2/client"
 	"github.com/bloodhoundad/azurehound/v2/client/query"
+	"github.com/bloodhoundad/azurehound/v2/client/rest"
 	"github.com/bloodhoundad/azurehound/v2/config"
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
@@ -102,25 +103,54 @@ func listGroupMembers(ctx context.Context, client client.AzureClient, groups <-c
 			defer panicrecovery.PanicRecovery()
 			defer wg.Done()
 			for id := range stream {
+				// Microsoft Graph pagination cursors embedded in @odata.nextLink
+				// can expire mid-enumeration for large groups (error code
+				// Directory_ExpiredPageToken). This is independent of the OAuth
+				// access token's lifetime. When it happens, the only recourse is
+				// to restart the member enumeration from scratch so Graph issues
+				// a fresh cursor. Retry per-group with a bounded attempt count.
+				const maxAttempts = 4
 				var (
-					data = models.GroupMembers{
-						GroupId: id,
-					}
-					count = 0
+					data  models.GroupMembers
+					count int
 				)
-				for item := range client.ListAzureADGroupMembers(ctx, id, params) {
-					if item.Error != nil {
-						log.Error(item.Error, "unable to continue processing members for this group", "groupId", id)
-					} else {
-						groupMember := models.GroupMember{
-							Member:  item.Ok,
-							GroupId: id,
+				for attempt := 1; attempt <= maxAttempts; attempt++ {
+					data = models.GroupMembers{GroupId: id}
+					count = 0
+					expired := false
+
+					for item := range client.ListAzureADGroupMembers(ctx, id, params) {
+						if item.Error != nil {
+							if rest.IsExpiredPageToken(item.Error) {
+								expired = true
+								log.Info("page token expired mid-enumeration, will retry group",
+									"groupId", id, "attempt", attempt, "collectedSoFar", count)
+								// Producer already returned after emitting the error;
+								// the channel will close and this range will exit.
+								continue
+							}
+							log.Error(item.Error, "unable to continue processing members for this group",
+								"groupId", id, "attempt", attempt)
+						} else {
+							groupMember := models.GroupMember{
+								Member:  item.Ok,
+								GroupId: id,
+							}
+							log.V(2).Info("found group member", "groupId", groupMember.GroupId)
+							count++
+							data.Members = append(data.Members, groupMember)
 						}
-						log.V(2).Info("found group member", "groupId", groupMember.GroupId)
-						count++
-						data.Members = append(data.Members, groupMember)
+					}
+
+					if !expired {
+						break
+					}
+					if attempt == maxAttempts {
+						log.Error(fmt.Errorf("exhausted %d retries due to Directory_ExpiredPageToken", maxAttempts),
+							"group members may be incomplete", "groupId", id, "partialCount", count)
 					}
 				}
+
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZGroupMember,
 					Data: data,
