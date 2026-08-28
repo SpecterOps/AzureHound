@@ -20,6 +20,7 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"os"
 
 	client "github.com/bloodhoundad/azurehound/v2/client/config"
 	config "github.com/bloodhoundad/azurehound/v2/config/internal"
@@ -55,6 +56,36 @@ func CheckCollectionConfigSanity(log logr.Logger) {
 	useSaneIntValues(ColMaxConnsPerHost, log)
 	useSaneIntValues(ColMaxIdleConnsPerHost, log)
 	useSaneIntValues(ColStreamCount, log)
+}
+
+// ValidateLoggingConfig checks file logging settings before the logger is
+// created. Logging limits are ignored when file logging is disabled.
+func ValidateLoggingConfig() error {
+	if logFile, ok := LogFile.Value().(string); !ok || logFile == "" {
+		return nil
+	} else if fileInfo, err := os.Stat(logFile); err == nil && fileInfo.IsDir() {
+		return fmt.Errorf("%s must reference a file, not a directory: %q", LogFile.Name, logFile)
+	} else if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("could not inspect %s %q: %w", LogFile.Name, logFile, err)
+	} else if err == nil && fileInfo.Mode().IsRegular() {
+		if file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0); err != nil {
+			return fmt.Errorf("could not open %s %q for writing: %w", LogFile.Name, logFile, err)
+		} else if err := file.Close(); err != nil {
+			return fmt.Errorf("could not close %s %q after validating write access: %w", LogFile.Name, logFile, err)
+		}
+	}
+
+	if value := LogMaxSize.Value().(int); value < LogMaxSize.MinValue {
+		return fmt.Errorf("%s must be at least %d", LogMaxSize.Name, LogMaxSize.MinValue)
+	}
+	if value := LogMaxAge.Value().(int); value < LogMaxAge.MinValue {
+		return fmt.Errorf("%s must be at least %d", LogMaxAge.Name, LogMaxAge.MinValue)
+	}
+	if value := LogMaxBackups.Value().(int); value < LogMaxBackups.MinValue {
+		return fmt.Errorf("%s must be at least %d", LogMaxBackups.Name, LogMaxBackups.MinValue)
+	}
+
+	return nil
 }
 
 func useSaneIntValues(c config.Config, log logr.Logger) {

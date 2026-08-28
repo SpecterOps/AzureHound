@@ -34,6 +34,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/config"
@@ -79,9 +80,9 @@ func configure() error {
 	// Configure Azure connection
 	if _, region, err := choose("Azure Region", config.AzRegions, 1); err != nil {
 		return err
-	} else if tenantId, err := prompt("Directory (tenant) ID", validateGuid, false); err != nil {
+	} else if tenantId, err := prompt("Directory (tenant) ID", validateGuid, false, ""); err != nil {
 		return err
-	} else if appId, err := prompt("Application (client) ID", validateGuid, false); err != nil {
+	} else if appId, err := prompt("Application (client) ID", validateGuid, false, ""); err != nil {
 		return err
 	} else if _, authMethod, err := choose("Authentication Method", enums.AuthMethods(), 0); err != nil {
 		return err
@@ -92,18 +93,18 @@ func configure() error {
 
 		if authMethod == enums.Certificate {
 			if genCert = confirm("Generate Certificate and Key", true); genCert {
-				if keyPass, err := prompt("Private Key Passphrase (optional)", nil, true); err != nil {
+				if keyPass, err := prompt("Private Key Passphrase (optional)", nil, true, ""); err != nil {
 					return err
 				} else {
 					config.AzCert.Set(genCertPath)
 					config.AzKey.Set(genKeyPath)
 					config.AzKeyPass.Set(keyPass)
 				}
-			} else if certPath, err := prompt("Public Certificate Path", validatePem, false); err != nil {
+			} else if certPath, err := prompt("Public Certificate Path", validatePem, false, ""); err != nil {
 				return err
-			} else if keyPath, err := prompt("Private Key Path", validatePem, false); err != nil {
+			} else if keyPath, err := prompt("Private Key Path", validatePem, false, ""); err != nil {
 				return err
-			} else if keyPass, err := prompt("Private Key Passphrase (optional)", nil, true); err != nil {
+			} else if keyPass, err := prompt("Private Key Passphrase (optional)", nil, true, ""); err != nil {
 				return err
 			} else {
 				config.AzCert.Set(certPath)
@@ -111,9 +112,9 @@ func configure() error {
 				config.AzKeyPass.Set(keyPass)
 			}
 		} else if authMethod == enums.UsernamePassword {
-			if upn, err := prompt("Input the User Principal Name", validateUserPrincipalName, false); err != nil {
+			if upn, err := prompt("Input the User Principal Name", validateUserPrincipalName, false, ""); err != nil {
 				return err
-			} else if password, err := prompt("Input the password", nil, true); err != nil {
+			} else if password, err := prompt("Input the password", nil, true, ""); err != nil {
 				return err
 			} else {
 				config.AzUsername.Set(upn)
@@ -125,7 +126,7 @@ func configure() error {
 				return err
 			} else if identityType == "User-Assigned" {
 				// User-Assigned: Prompt for Client ID
-				if umiClient, err := prompt("Input the User-Assigned Managed Identity (Client ID)", validateGuid, true); err != nil {
+				if umiClient, err := prompt("Input the User-Assigned Managed Identity (Client ID)", validateGuid, true, ""); err != nil {
 					return err
 				} else {
 					config.AzManagedIdentityClientId.Set(umiClient)
@@ -134,7 +135,7 @@ func configure() error {
 				// System-Assigned: Set client ID to empty string
 				config.AzManagedIdentityClientId.Set("")
 			}
-		} else if secret, err := prompt("Client Secret", nil, true); err != nil {
+		} else if secret, err := prompt("Client Secret", nil, true, ""); err != nil {
 			return err
 		} else {
 			config.AzSecret.Set(secret)
@@ -144,11 +145,11 @@ func configure() error {
 
 	// Configure BloodHound Enterprise Connection
 	if confirm("Setup connection to BloodHound Enterprise", true) {
-		if bheUrl, err := prompt("BloodHound Enterprise URL", config.ValidateURL, false); err != nil {
+		if bheUrl, err := prompt("BloodHound Enterprise URL", config.ValidateURL, false, ""); err != nil {
 			return err
-		} else if bheTokenId, err := prompt("BloodHound Enterprise Token ID", validateGuid, false); err != nil {
+		} else if bheTokenId, err := prompt("BloodHound Enterprise Token ID", validateGuid, false, ""); err != nil {
 			return err
-		} else if bheToken, err := prompt("BloodHound Enterprise Token", nil, true); err != nil {
+		} else if bheToken, err := prompt("BloodHound Enterprise Token", nil, true, ""); err != nil {
 			return err
 		} else {
 			config.BHEUrl.Set(bheUrl)
@@ -159,7 +160,7 @@ func configure() error {
 
 	// Configure Proxy
 	if confirm("Set proxy URL", true) {
-		if proxyURL, err := prompt("Proxy URL", config.ValidateURL, false); err != nil {
+		if proxyURL, err := prompt("Proxy URL", config.ValidateURL, false, ""); err != nil {
 			return err
 		} else {
 			if parsedURL, err := url.Parse(proxyURL); err != nil {
@@ -178,11 +179,34 @@ func configure() error {
 	if confirm("Setup AzureHound logging", true) {
 		if idx, _, err := choose("Verbosity", verbosityOptions, 1); err != nil {
 			return err
-		} else if logFile, err := prompt("Log file (optional)", nil, false); err != nil {
+		} else if logFile, err := prompt("Log file (optional)", nil, false, ""); err != nil {
+			return err
+		} else if logMaxSize, err := prompt("Maximum log size in MiB", validateMinInt(1), false, strconv.Itoa(config.DefaultLogMaxSize)); err != nil {
+			return err
+		} else if logMaxAge, err := prompt("Maximum archive age in days (0 disables)", validateMinInt(0), false, strconv.Itoa(config.DefaultLogMaxAge)); err != nil {
+			return err
+		} else if logMaxBackups, err := prompt("Maximum archive count (0 disables)", validateMinInt(0), false, strconv.Itoa(config.DefaultLogMaxBackups)); err != nil {
 			return err
 		} else {
+			logMaxSizeValue, err := strconv.Atoi(logMaxSize)
+			if err != nil {
+				return err
+			}
+			logMaxAgeValue, err := strconv.Atoi(logMaxAge)
+			if err != nil {
+				return err
+			}
+			logMaxBackupsValue, err := strconv.Atoi(logMaxBackups)
+			if err != nil {
+				return err
+			}
+
 			config.VerbosityLevel.Set(idx - 1)
 			config.LogFile.Set(logFile)
+			config.LogMaxSize.Set(logMaxSizeValue)
+			config.LogMaxAge.Set(logMaxAgeValue)
+			config.LogMaxBackups.Set(logMaxBackupsValue)
+			config.LogCompress.Set(confirm("Compress rotated logs", true))
 			config.JsonLogs.Set(confirm("Enable Structured Logs", false))
 		}
 	}
@@ -213,16 +237,30 @@ func configure() error {
 	return nil
 }
 
-func prompt(label string, validator func(string) error, isSensitive bool) (string, error) {
+func prompt(label string, validator func(string) error, isSensitive bool, defaultValue string) (string, error) {
 	p := promptui.Prompt{
 		Label:    label,
 		Validate: validator,
+		Default:  defaultValue,
 	}
 	if isSensitive {
 		p.HideEntered = true
 		p.Mask = '*'
 	}
 	return p.Run()
+}
+
+func validateMinInt(minimum int) func(string) error {
+	return func(input string) error {
+		value, err := strconv.Atoi(input)
+		if err != nil {
+			return fmt.Errorf("must be an integer")
+		}
+		if value < minimum {
+			return fmt.Errorf("must be at least %d", minimum)
+		}
+		return nil
+	}
 }
 
 func choose(label string, items []string, pos int) (int, string, error) {

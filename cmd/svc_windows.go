@@ -41,6 +41,9 @@ type azurehoundSvc struct {
 func (s *azurehoundSvc) Init(env svc.Environment) error {
 	config.LoadValues(nil, config.Options())
 	config.SetAzureDefaults()
+	if err := config.ValidateLoggingConfig(); err != nil {
+		return fmt.Errorf("invalid logging configuration: %w", err)
+	}
 
 	if logr, err := logger.GetLogger(); err != nil {
 		return err

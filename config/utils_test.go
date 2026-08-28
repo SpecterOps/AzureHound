@@ -18,6 +18,7 @@
 package config_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/config"
@@ -71,5 +72,95 @@ func TestCheckCollectionConfigSanityOutOfBounds(t *testing.T) {
 		if config.ColMaxConnsPerHost.Value().(int) != config.ColMaxConnsPerHost.Default {
 			t.Errorf("ColMaxConnsPerHost should have reverted to the default value of %d. Actual: %d", config.ColMaxConnsPerHost.Default, config.ColMaxConnsPerHost.Value())
 		}
+	}
+}
+
+func TestValidateLoggingConfig(t *testing.T) {
+	oldLogFile := config.LogFile.Value()
+	oldMaxSize := config.LogMaxSize.Value()
+	oldMaxAge := config.LogMaxAge.Value()
+	oldMaxBackups := config.LogMaxBackups.Value()
+	defer func() {
+		config.LogFile.Set(oldLogFile)
+		config.LogMaxSize.Set(oldMaxSize)
+		config.LogMaxAge.Set(oldMaxAge)
+		config.LogMaxBackups.Set(oldMaxBackups)
+	}()
+
+	config.LogFile.Set("azurehound.log")
+	config.LogMaxSize.Set(100)
+	config.LogMaxAge.Set(14)
+	config.LogMaxBackups.Set(20)
+	if err := config.ValidateLoggingConfig(); err != nil {
+		t.Fatalf("valid logging configuration returned an error: %v", err)
+	}
+
+	tests := []struct {
+		name   string
+		config config.Config
+		value  int
+	}{
+		{name: "zero max size", config: config.LogMaxSize, value: 0},
+		{name: "negative max age", config: config.LogMaxAge, value: -1},
+		{name: "negative max backups", config: config.LogMaxBackups, value: -1},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			original := test.config.Value()
+			test.config.Set(test.value)
+			defer test.config.Set(original)
+			if err := config.ValidateLoggingConfig(); err == nil {
+				t.Fatal("expected validation error")
+			}
+		})
+	}
+
+	config.LogMaxAge.Set(0)
+	config.LogMaxBackups.Set(0)
+	if err := config.ValidateLoggingConfig(); err != nil {
+		t.Fatalf("disabled pruning returned an error: %v", err)
+	}
+}
+
+func TestValidateLoggingConfigIgnoredWithoutLogFile(t *testing.T) {
+	oldLogFile := config.LogFile.Value()
+	oldMaxSize := config.LogMaxSize.Value()
+	defer func() {
+		config.LogFile.Set(oldLogFile)
+		config.LogMaxSize.Set(oldMaxSize)
+	}()
+
+	config.LogFile.Set("")
+	config.LogMaxSize.Set(0)
+	if err := config.ValidateLoggingConfig(); err != nil {
+		t.Fatalf("file logging limits should be ignored without a log file: %v", err)
+	}
+}
+
+func TestValidateLoggingConfigRejectsDirectoryLogPath(t *testing.T) {
+	oldLogFile := config.LogFile.Value()
+	oldMaxSize := config.LogMaxSize.Value()
+	oldMaxAge := config.LogMaxAge.Value()
+	oldMaxBackups := config.LogMaxBackups.Value()
+	defer func() {
+		config.LogFile.Set(oldLogFile)
+		config.LogMaxSize.Set(oldMaxSize)
+		config.LogMaxAge.Set(oldMaxAge)
+		config.LogMaxBackups.Set(oldMaxBackups)
+	}()
+
+	logPath := t.TempDir()
+	config.LogFile.Set(logPath)
+	config.LogMaxSize.Set(config.DefaultLogMaxSize)
+	config.LogMaxAge.Set(config.DefaultLogMaxAge)
+	config.LogMaxBackups.Set(config.DefaultLogMaxBackups)
+
+	err := config.ValidateLoggingConfig()
+	if err == nil {
+		t.Fatal("expected a directory-valued log path to be rejected")
+	}
+	if !strings.Contains(err.Error(), "not a directory") {
+		t.Fatalf("unexpected validation error: %v", err)
 	}
 }
