@@ -8,7 +8,7 @@ ENV CGO_ENABLED=1
 
 COPY ./ ./
 RUN go mod download
-RUN go build -ldflags="-s -w -X github.com/SpecterOps/AzureHound/v2/constants.Version=$VERSION+docker"
+RUN go build -o azurehound -ldflags="-s -w -X github.com/SpecterOps/AzureHound/v2/constants.Version=$VERSION+docker"
 
 FROM gcr.io/distroless/base-debian12:nonroot
 LABEL org.opencontainers.image.source=https://github.com/SpecterOps/AzureHound

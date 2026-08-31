@@ -29,7 +29,7 @@ The rolling release contains pre-built binaries that are automatically kept up-t
 To build this project from source run the following:
 
 ```sh
-go build -ldflags="-s -w -X github.com/SpecterOps/AzureHound/v2/constants.Version=`git describe tags --exact-match 2> /dev/null || git rev-parse HEAD`"
+go build -o azurehound -ldflags="-s -w -X github.com/SpecterOps/AzureHound/v2/constants.Version=`git describe tags --exact-match 2> /dev/null || git rev-parse HEAD`"
 ```
 
 ## Documentation
