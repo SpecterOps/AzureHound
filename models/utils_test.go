@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/models"
 	"github.com/stretchr/testify/require"
 )
 

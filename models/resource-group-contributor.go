@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
 
 type ResourceGroupContributor struct {

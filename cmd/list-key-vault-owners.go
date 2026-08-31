@@ -23,12 +23,12 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/constants"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/internal"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/SpecterOps/AzureHound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/internal"
+	"github.com/SpecterOps/AzureHound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/panicrecovery"
+	"github.com/SpecterOps/AzureHound/v2/pipeline"
 	"github.com/spf13/cobra"
 )
 

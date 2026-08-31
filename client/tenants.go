@@ -21,10 +21,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/bloodhoundad/azurehound/v2/constants"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/client/rest"
+	"github.com/SpecterOps/AzureHound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
 
 func (s *azureClient) GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error) {

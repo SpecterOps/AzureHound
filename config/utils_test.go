@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/logger"
+	"github.com/SpecterOps/AzureHound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/logger"
 )
 
 func TestCheckCollectionConfigSanity(t *testing.T) {

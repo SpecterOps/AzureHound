@@ -9,13 +9,13 @@ import (
 	"slices"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client"
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/SpecterOps/AzureHound/v2/client"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/panicrecovery"
+	"github.com/SpecterOps/AzureHound/v2/pipeline"
 	"github.com/spf13/cobra"
 )
 

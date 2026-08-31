@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
 	"github.com/stretchr/testify/require"
 )
 

@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
 
 // ListAzureManagedClusters https://learn.microsoft.com/en-us/rest/api/servicefabric/managedclusters/managed-clusters/list-by-subscription?view=rest-servicefabric-managedclusters-2021-07-01

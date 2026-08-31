@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 )

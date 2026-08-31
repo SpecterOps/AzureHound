@@ -37,8 +37,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/enums"
 	"github.com/gofrs/uuid"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"

@@ -22,8 +22,8 @@ import (
 
 	"golang.org/x/sys/windows/svc"
 
-	"github.com/bloodhoundad/azurehound/v2/cmd"
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/cmd"
+	"github.com/SpecterOps/AzureHound/v2/constants"
 )
 
 func main() {

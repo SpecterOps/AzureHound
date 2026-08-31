@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
 
 // ListAzureStorageAccounts https://learn.microsoft.com/en-us/rest/api/storagerp/storage-accounts/list?view=rest-storagerp-2022-05-01

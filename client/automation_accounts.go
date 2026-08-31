@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
 
 // ListAzureAutomationAccounts https://learn.microsoft.com/en-us/rest/api/automation/automation-account/list?view=rest-automation-2021-06-22

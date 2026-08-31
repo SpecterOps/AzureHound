@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/config"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 

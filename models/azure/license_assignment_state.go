@@ -18,7 +18,7 @@
 package azure
 
 import (
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/enums"
 )
 
 // Provides details about license assignments to a user.

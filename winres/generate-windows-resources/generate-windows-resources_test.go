@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/constants"
 )
 
 func TestParseProductVersion(t *testing.T) {
