@@ -29,8 +29,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/client/config"
+	"github.com/SpecterOps/AzureHound/v2/constants"
 )
 
 // AuthStrategy is an interface that defines the methods that an authentication strategy must implement

@@ -29,8 +29,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/client/config"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
 )
 
 type RestClient interface {

@@ -18,7 +18,7 @@
 package azure
 
 import (
-	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/enums"
 )
 
 // Represents a device registered in the organization. Devices are created in the cloud using the Device Registration

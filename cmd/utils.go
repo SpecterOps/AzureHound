@@ -26,18 +26,18 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
+	"github.com/SpecterOps/AzureHound/v2/client/rest"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/proxy"
 
-	"github.com/bloodhoundad/azurehound/v2/client"
-	client_config "github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/bloodhoundad/azurehound/v2/logger"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
-	"github.com/bloodhoundad/azurehound/v2/sinks"
+	"github.com/SpecterOps/AzureHound/v2/client"
+	client_config "github.com/SpecterOps/AzureHound/v2/client/config"
+	"github.com/SpecterOps/AzureHound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/enums"
+	"github.com/SpecterOps/AzureHound/v2/logger"
+	"github.com/SpecterOps/AzureHound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/pipeline"
+	"github.com/SpecterOps/AzureHound/v2/sinks"
 )
 
 func init() {

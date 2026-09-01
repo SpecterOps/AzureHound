@@ -13,10 +13,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/bloodhoundad/azurehound/v2/constants"
-	"github.com/bloodhoundad/azurehound/v2/models"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/SpecterOps/AzureHound/v2/client/rest"
+	"github.com/SpecterOps/AzureHound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/models"
+	"github.com/SpecterOps/AzureHound/v2/pipeline"
 	"github.com/go-logr/logr"
 )
 

@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/SpecterOps/AzureHound/v2/enums"
 
 type RoutingPreference struct {
 	PublishInternetEndpoints  bool                `json:"publishInternetEndpoints,omitempty"`

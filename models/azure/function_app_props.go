@@ -17,7 +17,7 @@
 
 package azure
 
-import "github.com/bloodhoundad/azurehound/v2/enums"
+import "github.com/SpecterOps/AzureHound/v2/enums"
 
 type FunctionAppProperties struct {
 	AvailabilityState           enums.SiteAvailabilityState `json:"availabilityState,omitempty"`

@@ -22,9 +22,9 @@ import (
 	"net/url"
 	"os"
 
-	client "github.com/bloodhoundad/azurehound/v2/client/config"
-	config "github.com/bloodhoundad/azurehound/v2/config/internal"
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	client "github.com/SpecterOps/AzureHound/v2/client/config"
+	config "github.com/SpecterOps/AzureHound/v2/config/internal"
+	"github.com/SpecterOps/AzureHound/v2/constants"
 	"github.com/go-logr/logr"
 )
 

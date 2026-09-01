@@ -27,12 +27,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/client/config"
-	"github.com/bloodhoundad/azurehound/v2/client/query"
-	"github.com/bloodhoundad/azurehound/v2/client/rest"
-	"github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/bloodhoundad/azurehound/v2/panicrecovery"
-	"github.com/bloodhoundad/azurehound/v2/pipeline"
+	"github.com/SpecterOps/AzureHound/v2/client/config"
+	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/client/rest"
+	"github.com/SpecterOps/AzureHound/v2/models/azure"
+	"github.com/SpecterOps/AzureHound/v2/panicrecovery"
+	"github.com/SpecterOps/AzureHound/v2/pipeline"
 )
 
 // This prevents a hung connection from blocking the entire collection pipeline indefinitely.

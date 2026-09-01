@@ -1,4 +1,4 @@
-module github.com/bloodhoundad/azurehound/v2
+module github.com/SpecterOps/AzureHound/v2
 
 go 1.25.0
 

@@ -24,8 +24,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	logger "github.com/bloodhoundad/azurehound/v2/logger/internal"
+	"github.com/SpecterOps/AzureHound/v2/config"
+	logger "github.com/SpecterOps/AzureHound/v2/logger/internal"
 	"github.com/go-logr/logr"
 )
 

@@ -40,7 +40,12 @@ jobs:
           go run winres/generate-windows-resources/generate-windows-resources.go "${{ env.AZUREHOUND_VERSION }}"
 
       - name: Build
-        run: 'go build -ldflags="-s -w -X github.com/bloodhoundad/azurehound/v2/constants.Version=${{ env.AZUREHOUND_VERSION }}"'
+        run: |
+          output=azurehound
+          if [ "$GOOS" = windows ]; then
+            output="${output}.exe"
+          fi
+          go build -o "$output" -ldflags="-s -w -X github.com/SpecterOps/AzureHound/v2/constants.Version=${{ env.AZUREHOUND_VERSION }}"
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
@@ -163,7 +168,7 @@ jobs:
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # ratchet:docker/metadata-action@v6
         with:
           images: |
-            ghcr.io/bloodhoundad/azurehound
+            ghcr.io/SpecterOps/AzureHound
             ${{ secrets.ACR_AZUREHOUND_REGISTRY_URL }}/azurehound
           tags: |
             type=semver,pattern={{version}},prefix=v

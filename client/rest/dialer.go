@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/config"
 	"github.com/go-logr/logr"
 	"golang.org/x/net/proxy"
 )

@@ -29,8 +29,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bloodhoundad/azurehound/v2/config"
-	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/SpecterOps/AzureHound/v2/config"
+	"github.com/SpecterOps/AzureHound/v2/constants"
 )
 
 func NewHTTPClient(proxyUrl string) (*http.Client, error) {
