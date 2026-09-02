@@ -152,5 +152,10 @@ func isGraphAuthorizationDenied(err error) bool {
 		return true
 	}
 
+	// The tenant does not have the necessary P2 license that grants access to auditlog.read.all.
+	if strings.Contains(msg, "Authentication_RequestFromNonPremiumTenantOrB2CTenant") && strings.Contains(msgLower, "doesn't have premium license") {
+		return true
+	}
+
 	return false
 }
