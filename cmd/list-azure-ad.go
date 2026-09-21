@@ -69,6 +69,10 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 		groups2 = make(chan interface{})
 		groups3 = make(chan interface{})
 
+		o365groups  = make(chan interface{})
+		o365groups2 = make(chan interface{})
+		o365groups3 = make(chan interface{})
+
 		roles  = make(chan interface{})
 		roles2 = make(chan interface{})
 
@@ -92,6 +96,11 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 	pipeline.Tee(ctx.Done(), listGroups(ctx, client), groups, groups2, groups3)
 	groupOwners := listGroupOwners(ctx, client, groups2)
 	groupMembers := listGroupMembers(ctx, client, groups3)
+
+	// Enumerate Microsoft 365 Groups, GroupOwners and GroupMembers
+	pipeline.Tee(ctx.Done(), listGroups365(ctx, client), o365groups, o365groups2, o365groups3)
+	group365Owners := listGroup365Owners(ctx, client, o365groups2)
+	group365Members := listGroup365Members(ctx, client, o365groups3)
 
 	// Enumerate ServicePrincipals and ServicePrincipalOwners
 	pipeline.Tee(ctx.Done(), listServicePrincipals(ctx, client), servicePrincipals, servicePrincipals2, servicePrincipals3)
@@ -125,6 +134,9 @@ func listAllAD(ctx context.Context, client client.AzureClient) <-chan interface{
 		groupMembers,
 		groupOwners,
 		groups,
+		group365Members,
+		group365Owners,
+		o365groups,
 		roleAssignments,
 		roles,
 		servicePrincipalOwners,
