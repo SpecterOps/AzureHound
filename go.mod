@@ -1,6 +1,6 @@
 module github.com/SpecterOps/AzureHound/v2
 
-go 1.25.0
+go 1.27.1
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.2
