@@ -71,6 +71,7 @@ func listTenants(ctx context.Context, client client.AzureClient) <-chan interfac
 			Data: models.Tenant{
 				Tenant:    collectedTenant,
 				Collected: true,
+				External:  false,
 			},
 		}); !ok {
 			return
@@ -89,7 +90,8 @@ func listTenants(ctx context.Context, client client.AzureClient) <-chan interfac
 					if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 						Kind: enums.KindAZTenant,
 						Data: models.Tenant{
-							Tenant: item.Ok,
+							Tenant:   item.Ok,
+							External: false,
 						},
 					}); !ok {
 						return
