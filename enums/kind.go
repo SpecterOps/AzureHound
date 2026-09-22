@@ -75,6 +75,8 @@ const (
 	KindAZLogicAppRoleAssignment          Kind = "AZLogicAppRoleAssignment"
 	KindAZFunctionApp                     Kind = "AZFunctionApp"
 	KindAZFunctionAppRoleAssignment       Kind = "AZFunctionAppRoleAssignment"
+	KindAZEntraDS                         Kind = "AZEntraDS"
+	KindAZEntraDSRoleAssignment           Kind = "AZEntraDSRoleAssignment"
 	KindAZContainerRegistry               Kind = "AZContainerRegistry"
 	KindAZContainerRegistryRoleAssignment Kind = "AZContainerRegistryRoleAssignment"
 	KindAZWebApp                          Kind = "AZWebApp"
