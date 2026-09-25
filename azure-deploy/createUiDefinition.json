@@ -1,0 +1,103 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "basics": [
+            {}
+        ],
+        "steps": [
+            {
+                "name": "azureHoundConfig",
+                "label": "AzureHound Config Params",
+                "elements": [
+                    {
+                        "name": "azureTenantId",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Azure Tenant ID",
+                        "defaultValue": "",
+                        "toolTip": "Azure Tenant ID",
+                        "placeholder": "Azure Tenant ID",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                            "validationMessage": "Must be a valid GUID"
+                        }
+                    },
+                    {
+                        "name": "azureAppID",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Azure Application ID",
+                        "defaultValue": "",
+                        "toolTip": "Azure App ID",
+                        "placeholder": "Azure App ID",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                            "validationMessage": "Must be a valid GUID"
+                        }
+                    },
+                    {
+                        "name": "azureSecret",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Azure Secret ID",
+                        "defaultValue": "",
+                        "toolTip": "Azure Secret ID",
+                        "placeholder": "Azure Secret ID",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^.+$",
+                            "validationMessage": "Token must be alphanumeric."
+                        }
+                    },
+                    {
+                        "name": "bloodhoundInstanceDomain",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "BloodHound Instance Domain",
+                        "defaultValue": "",
+                        "toolTip": "Domain name of the BloodHound instance",
+                        "placeholder": "Domain name of the BloodHound instance",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^([a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$",
+                            "validationMessage": "Enter a valid domain (e.g., example.com)."
+                        }
+                    },
+                    {
+                        "name": "bloodhoundTokenId",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "BloodHound Token ID",
+                        "defaultValue": "",
+                        "toolTip": "The BloodHound Token Id",
+                        "placeholder": "The BloodHound Token Id",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                            "validationMessage": "Token ID must be a valid GUID."
+                        }
+                    },
+                    {
+                        "name": "bloodhoundToken",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "BloodHound Token Secret",
+                        "toolTip": "The secret Key of the BloodHound token",
+                        "placeholder": "The BloodHound Token Key",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^.+$",
+                            "validationMessage": "Token must be alphanumeric."
+                        }
+                    }
+                ]
+            }
+        ],
+        "outputs": {
+            "azureTenantId": "[steps('azureHoundConfig').azureTenantId]",
+            "azureAppID": "[steps('azureHoundConfig').azureAppID]",
+            "azureSecret": "[steps('azureHoundConfig').azureSecret]",
+            "bloodhoundInstanceDomain": "[steps('azureHoundConfig').bloodhoundInstanceDomain]",
+            "bloodhoundTokenId": "[steps('azureHoundConfig').bloodhoundTokenId]",
+            "bloodhoundToken": "[steps('azureHoundConfig').bloodhoundToken]"
+        }
+    }
+}
