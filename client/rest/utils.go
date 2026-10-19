@@ -96,13 +96,26 @@ func ParseBody(accessToken string) (map[string]interface{}, error) {
 	}
 }
 
+// Entra ID issues tokens for the Azure Resource Manager under either of two
+// registered identifier URIs; ARM accepts both, but AzureHound only compares
+// against the canonical endpoint, so normalize the legacy form.
+var audAliases = map[string]string{
+	"https://management.core.windows.net":       "https://management.azure.com",
+	"https://management.core.usgovcloudapi.net": "https://management.usgovcloudapi.net",
+	"https://management.core.chinacloudapi.cn":  "https://management.chinacloudapi.cn",
+}
+
 func ParseAud(accessToken string) (string, error) {
 	if body, err := ParseBody(accessToken); err != nil {
 		return "", err
 	} else if aud, ok := body["aud"].(string); !ok {
 		return "", fmt.Errorf("invalid 'aud' type: %T", body["aud"])
 	} else {
-		return strings.TrimSuffix(aud, "/"), nil
+		aud = strings.TrimSuffix(aud, "/")
+		if canonical, ok := audAliases[aud]; ok {
+			return canonical, nil
+		}
+		return aud, nil
 	}
 }
 
