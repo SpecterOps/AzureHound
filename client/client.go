@@ -192,6 +192,7 @@ type azureClient struct {
 
 type AzureGraphClient interface {
 	GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error)
+	GetAzureADTenantInfoById(ctx context.Context, tenantId string) (azure.Tenant, error)
 
 	ListAzureADGroups(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Group]
 	ListAzureADGroupMembers(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
@@ -202,6 +203,7 @@ type AzureGraphClient interface {
 	ListAzureADUsers(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.User]
 	ListAzureADRoleAssignments(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.UnifiedRoleAssignment]
 	ListAzureADRoles(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Role]
+	ListAzureADPartners(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Partner]
 	ListAzureADServicePrincipalOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
 	ListAzureADServicePrincipals(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.ServicePrincipal]
 	ListAzureDeviceRegisteredOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
