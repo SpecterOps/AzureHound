@@ -194,6 +194,7 @@ type AzureGraphClient interface {
 	GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error)
 
 	ListAzureADGroups(ctx context.Context, params query.GraphParams) <-chan AzureResult[azure.Group]
+	GetAzureADGroupOnPremisesSyncBehavior(ctx context.Context, objectId string) (*azure.OnPremisesSyncBehavior, error)
 	ListAzureADGroupMembers(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
 	ListAzureADGroupOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]
 	ListAzureADAppOwners(ctx context.Context, objectId string, params query.GraphParams) <-chan AzureResult[json.RawMessage]

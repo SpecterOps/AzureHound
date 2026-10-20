@@ -77,6 +77,17 @@ func listGroups(ctx context.Context, client client.AzureClient) <-chan interface
 					TenantId:   client.TenantInfo().TenantId,
 					TenantName: client.TenantInfo().DisplayName,
 				}
+				// A group can only be an Entra Cloud Sync group-writeback target if it carries an on-premises SID to
+				// match against, so only resolve the cloud source-of-authority flag (isCloudManaged) for those groups.
+				// The flag lives on the onPremisesSyncBehavior navigation property, which is not returned on the group
+				// resource and does not support $expand, hence the per-group GET.
+				if group.OnPremisesSecurityIdentifier != "" {
+					if syncBehavior, err := client.GetAzureADGroupOnPremisesSyncBehavior(ctx, group.Id); err != nil {
+						log.V(2).Info("unable to resolve onPremisesSyncBehavior for group", "groupId", group.Id, "error", err)
+					} else if syncBehavior != nil {
+						group.IsCloudManaged = syncBehavior.IsCloudManaged
+					}
+				}
 				if ok := pipeline.SendAny(ctx.Done(), out, AzureWrapper{
 					Kind: enums.KindAZGroup,
 					Data: group,

@@ -56,6 +56,21 @@ func (mr *MockAzureClientMockRecorder) CloseIdleConnections() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseIdleConnections", reflect.TypeOf((*MockAzureClient)(nil).CloseIdleConnections))
 }
 
+// GetAzureADGroupOnPremisesSyncBehavior mocks base method.
+func (m *MockAzureClient) GetAzureADGroupOnPremisesSyncBehavior(ctx context.Context, objectId string) (*azure.OnPremisesSyncBehavior, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAzureADGroupOnPremisesSyncBehavior", ctx, objectId)
+	ret0, _ := ret[0].(*azure.OnPremisesSyncBehavior)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAzureADGroupOnPremisesSyncBehavior indicates an expected call of GetAzureADGroupOnPremisesSyncBehavior.
+func (mr *MockAzureClientMockRecorder) GetAzureADGroupOnPremisesSyncBehavior(ctx, objectId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureADGroupOnPremisesSyncBehavior", reflect.TypeOf((*MockAzureClient)(nil).GetAzureADGroupOnPremisesSyncBehavior), ctx, objectId)
+}
+
 // GetAzureADOrganization mocks base method.
 func (m *MockAzureClient) GetAzureADOrganization(ctx context.Context, selectCols []string) (*azure.Organization, error) {
 	m.ctrl.T.Helper()

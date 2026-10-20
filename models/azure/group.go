@@ -21,6 +21,19 @@ import (
 	"github.com/SpecterOps/AzureHound/v2/enums"
 )
 
+// OnPremisesSyncBehavior represents the onPremisesSyncBehavior navigation property of a group, which exposes the
+// group's cloud source-of-authority state.
+// For more detail see https://learn.microsoft.com/en-us/graph/api/resources/onpremisessyncbehavior?view=graph-rest-beta
+type OnPremisesSyncBehavior struct {
+	// The unique identifier of the group this sync behavior describes.
+	Id string `json:"id,omitempty"`
+
+	// true if the group's source of authority is the cloud (Entra), i.e. the group is cloud-managed and written back
+	// to on-premises AD by Entra Cloud Sync group provisioning; false if the group remains on-premises-authoritative.
+	// nil if absent from the response.
+	IsCloudManaged *bool `json:"isCloudManaged,omitempty"`
+}
+
 // Represents an Azure Active Directory (Azure AD) group, which can be a Microsoft 365 group, or a security group.
 // For more detail see https://docs.microsoft.com/en-us/graph/api/resources/group?view=graph-rest-1.0
 type Group struct {
@@ -206,6 +219,15 @@ type Group struct {
 	// Read-only.
 	// Supports $filter (eq, ne, NOT, in).
 	OnPremisesSyncEnabled bool `json:"onPremisesSyncEnabled,omitempty"`
+
+	// IsCloudManaged indicates whether the group's source of authority is the cloud (Entra), i.e. the group is
+	// cloud-managed and Entra Cloud Sync group provisioning writes its membership back to the SID-matched
+	// on-premises AD group (on-premises edits are overwritten).
+	// This value is NOT returned on the group resource and the onPremisesSyncBehavior navigation property does not
+	// support $expand; it is resolved per-group via GET /groups/{id}/onPremisesSyncBehavior during collection and is
+	// only populated for groups that carry an on-premises security identifier.
+	// nil if not resolved.
+	IsCloudManaged *bool `json:"isCloudManaged,omitempty"`
 
 	// The preferred data location for the Microsoft 365 group.
 	// By default, the group inherits the group creator's preferred data location. To set this property, the calling
