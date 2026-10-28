@@ -68,6 +68,9 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		functionApps  = make(chan interface{})
 		functionApps2 = make(chan interface{})
 
+		domainServices  = make(chan interface{})
+		domainServices2 = make(chan interface{})
+
 		webApps  = make(chan interface{})
 		webApps2 = make(chan interface{})
 
@@ -119,6 +122,7 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		subscriptions10              = make(chan interface{})
 		subscriptions11              = make(chan interface{})
 		subscriptions12              = make(chan interface{})
+		subscriptions13              = make(chan interface{})
 		subscriptionRoleAssignments1 = make(chan interface{})
 		subscriptionRoleAssignments2 = make(chan interface{})
 		subscriptionRoleAssignments3 = make(chan interface{})
@@ -147,6 +151,7 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		subscriptions10,
 		subscriptions11,
 		subscriptions12,
+		subscriptions13,
 	)
 	pipeline.Tee(ctx.Done(), listResourceGroups(ctx, client, subscriptions2), resourceGroups, resourceGroups2)
 	pipeline.Tee(ctx.Done(), listKeyVaults(ctx, client, subscriptions3), keyVaults, keyVaults2, keyVaults3)
@@ -158,6 +163,7 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 	pipeline.Tee(ctx.Done(), listLogicApps(ctx, client, subscriptions10), logicApps, logicApps2)
 	pipeline.Tee(ctx.Done(), listManagedClusters(ctx, client, subscriptions11), managedClusters, managedClusters2)
 	pipeline.Tee(ctx.Done(), listVMScaleSets(ctx, client, subscriptions12), vmScaleSets, vmScaleSets2)
+	pipeline.Tee(ctx.Done(), listDomainServices(ctx, client, subscriptions13), domainServices, domainServices2)
 
 	// Enumerate Relationships
 	// ManagementGroups: Descendants, Owners, Contributors and UserAccessAdmins
@@ -198,6 +204,9 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 	// Enumerate Function App Role Assignments
 	functionAppRoleAssignments := listFunctionAppRoleAssignments(ctx, client, functionApps2)
 
+	// Enumerate Microsoft Entra Domain Services Role Assignments
+	domainServiceRoleAssignments := listDomainServiceRoleAssignments(ctx, client, domainServices2)
+
 	// Enumerate Web App Role Assignments
 	webAppRoleAssignments := listWebAppRoleAssignments(ctx, client, webApps2)
 
@@ -221,6 +230,8 @@ func listAllRM(ctx context.Context, client client.AzureClient) <-chan interface{
 		automationAccountRoleAssignments,
 		containerRegistries,
 		containerRegistryRoleAssignments,
+		domainServices,
+		domainServiceRoleAssignments,
 		functionApps,
 		functionAppRoleAssignments,
 		keyVaultAccessPolicies,
