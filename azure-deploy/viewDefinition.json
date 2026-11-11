@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/viewdefinition/0.0.1-preview/ViewDefinition.json#",
+  "views": [
+    {
+      "kind": "Overview",
+      "properties": {
+        "header": "🚀 AzureHound Application",
+        "description": "Follow these steps to configure your Azurehound integration:\n\n **Azure Tenant ID:** Enter your Azure Tenant ID.\n\n **Azure Application ID:** Register an application in Microsoft Entra ID. Grant it the following API permissions: Directory.Read.All, RoleManagement.Read.All, and provide admin consent.\n\n **Azure Secret ID:** Create a Client Secret for the registered app, and enter the secret value (not the ID).\n\n **BloodHound Instance Domain:** Enter your BloodHound instance domain name (exclude http:// or https://).\n\n **BloodHound Token ID:** Enter the Managed Client Token ID.\n\n **BloodHound Token Secret:** Enter the Managed Client Token Secret."
+      }
+    }
+  ]
+}
