@@ -152,10 +152,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.BHE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Upload Latest Version to S3
-        if: ${{ !contains(env.AZUREHOUND_VERSION, '-') }}
+      - name: Update "azurehound-latest-version" file
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
         run: |
-          echo -n "${{ env.AZUREHOUND_VERSION }}" | aws s3 cp - s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version
+          # Only promote stable vMAJOR.MINOR.PATCH tags.
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Skipping non-stable tag: $RELEASE_TAG"
+            exit 0
+          fi
+
+          is_prerelease=$(gh release view "$RELEASE_TAG" \
+            --json isDraft,isPrerelease \
+            --jq '.isDraft or .isPrerelease')
+
+          if [[ "$is_prerelease" == "true" ]]; then
+            echo "Skipping draft or prerelease: $RELEASE_TAG"
+            exit 0
+          fi
+
+          printf '%s' "$RELEASE_TAG" |
+            aws s3 cp - "s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version"
 
   containerize:
     runs-on: ubuntu-latest
