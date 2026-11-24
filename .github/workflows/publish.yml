@@ -9,6 +9,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         os:
@@ -63,12 +65,66 @@ jobs:
       - name: Compute Checksum
         run: sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256
 
-      - name: Upload Release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3
+      - name: Stage Release Files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7.0.1
         with:
-          files: |
+          name: azurehound-release-${{ matrix.os }}-${{ matrix.arch }}
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: true
+          path: |
             ${{ env.FILE_NAME }}.zip
             ${{ env.FILE_NAME }}.zip.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      is_stable: ${{ steps.release-tag.outputs.is_stable }}
+
+    steps:
+      - name: Check Release Tag
+        id: release-tag
+        shell: bash
+        run: |
+          stable_tag_pattern='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if [[ "$GITHUB_REF_NAME" =~ $stable_tag_pattern ]]; then
+            echo "is_stable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_stable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Release Files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # ratchet:actions/download-artifact@v8.0.1
+        with:
+          pattern: azurehound-release-*
+          merge-multiple: true
+
+      - name: Write Version File
+        if: steps.release-tag.outputs.is_stable == 'true'
+        run: printf '%s\n' "$GITHUB_REF_NAME" > version.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3
+        with:
+          prerelease: ${{ steps.release-tag.outputs.is_stable == 'false' }}
+          fail_on_unmatched_files: true
+          files: |
+            AzureHound_${{ github.ref_name }}_darwin_amd64.zip
+            AzureHound_${{ github.ref_name }}_darwin_amd64.zip.sha256
+            AzureHound_${{ github.ref_name }}_darwin_arm64.zip
+            AzureHound_${{ github.ref_name }}_darwin_arm64.zip.sha256
+            AzureHound_${{ github.ref_name }}_linux_amd64.zip
+            AzureHound_${{ github.ref_name }}_linux_amd64.zip.sha256
+            AzureHound_${{ github.ref_name }}_linux_arm64.zip
+            AzureHound_${{ github.ref_name }}_linux_arm64.zip.sha256
+            AzureHound_${{ github.ref_name }}_windows_amd64.zip
+            AzureHound_${{ github.ref_name }}_windows_amd64.zip.sha256
+            AzureHound_${{ github.ref_name }}_windows_arm64.zip
+            AzureHound_${{ github.ref_name }}_windows_arm64.zip.sha256
+            ${{ steps.release-tag.outputs.is_stable == 'true' && 'version.txt' || '' }}
 
   sign:
     runs-on: ubuntu-22.04 # INFO: https://docs.digicert.com/en/digicert-keylocker/code-signing/sign-with-third-party-signing-tools/windows-applications/sign-authenticode-files-with-osslsigncode-using-openssl-pkcs11-engine.html#a-note-for-ubuntu-users-488674
@@ -136,11 +192,41 @@ jobs:
 
       - name: Checksum Zipped Files
         run: |
-          sha256sum zipped/${{ env.FILE_NAME }}.zip > zipped/${{ env.FILE_NAME }}.zip.sha256
+          (cd zipped && sha256sum ${{ env.FILE_NAME }}.zip > ${{ env.FILE_NAME }}.zip.sha256)
 
       - name: Upload Artifacts to S3
         run: |
           aws s3 cp --recursive zipped/ s3://${{ secrets.BHE_AWS_BUCKET }}
+
+  publish_latest_version_marker:
+    runs-on: ubuntu-latest
+    needs: [sign, publish]
+    if: needs.publish.outputs.is_stable == 'true'
+    steps:
+      - uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # ratchet:aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.BHE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.BHE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update "azurehound-latest-version" file
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          is_prerelease=$(gh release view "$RELEASE_TAG" \
+            --json isDraft,isPrerelease \
+            --jq '.isDraft or .isPrerelease')
+
+          if [[ "$is_prerelease" == "true" ]]; then
+            echo "Skipping draft or prerelease: $RELEASE_TAG"
+            exit 0
+          fi
+
+          printf '%s' "$RELEASE_TAG" |
+            aws s3 cp - "s3://${{ secrets.BHE_AWS_BUCKET }}/azurehound-latest-version"
 
   containerize:
     runs-on: ubuntu-latest
