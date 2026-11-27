@@ -182,7 +182,7 @@ func (s *BHEClient) Ingest(ctx context.Context, in <-chan []any) bool {
 			s.log.Error(err, unrecoverableErrMsg)
 			return true
 		} else {
-			req.Header.Set("User-Agent", constants.UserAgent())
+			req.Header.Set("User-Agent", rest.UserAgent())
 			req.Header.Set("Accept", "application/json")
 			req.Header.Set("Content-Encoding", "gzip")
 

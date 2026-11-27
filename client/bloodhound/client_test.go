@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bloodhoundad/azurehound/v2/config"
+	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
@@ -140,5 +142,52 @@ func TestBHEClient_Ingest(t *testing.T) {
 		hadErrors := client.Ingest(context.Background(), data)
 
 		require.True(t, hadErrors)
+	})
+
+	t.Run("custom user agent applied", func(t *testing.T) {
+		const custom = "test-agent/9.9.9"
+		config.UserAgent.Set(custom)
+		t.Cleanup(func() { config.UserAgent.Set("") })
+
+		var got string
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			got = r.Header.Get("User-Agent")
+			w.WriteHeader(http.StatusAccepted)
+		}))
+		defer testServer.Close()
+
+		testUrl, _ := url.Parse(testServer.URL)
+		client, err := NewBHEClient(*testUrl, "tokenId", "token", "", 1, 1, logr.Logger{})
+		require.NoError(t, err)
+
+		data := make(chan []any, 1)
+		data <- []any{"test"}
+		close(data)
+
+		require.False(t, client.Ingest(context.Background(), data))
+		require.Equal(t, custom, got)
+	})
+
+	t.Run("default user agent when config empty", func(t *testing.T) {
+		config.UserAgent.Set("")
+		t.Cleanup(func() { config.UserAgent.Set("") })
+
+		var got string
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			got = r.Header.Get("User-Agent")
+			w.WriteHeader(http.StatusAccepted)
+		}))
+		defer testServer.Close()
+
+		testUrl, _ := url.Parse(testServer.URL)
+		client, err := NewBHEClient(*testUrl, "tokenId", "token", "", 1, 1, logr.Logger{})
+		require.NoError(t, err)
+
+		data := make(chan []any, 1)
+		data <- []any{"test"}
+		close(data)
+
+		require.False(t, client.Ingest(context.Background(), data))
+		require.Equal(t, constants.UserAgent(), got)
 	})
 }
