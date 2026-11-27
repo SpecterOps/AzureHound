@@ -229,6 +229,7 @@ type AzureResourceManagerClient interface {
 	ListAzureAutomationAccounts(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.AutomationAccount]
 	ListAzureLogicApps(ctx context.Context, subscriptionId string, filter string, top int32) <-chan AzureResult[azure.LogicApp]
 	ListAzureFunctionApps(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.FunctionApp]
+	ListAzureDomainServices(ctx context.Context, subscriptionId string) <-chan AzureResult[azure.DomainService]
 }
 
 type AzureClient interface {
