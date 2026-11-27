@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/SpecterOps/AzureHound/v2/client/query"
+	"github.com/SpecterOps/AzureHound/v2/client/rest"
 	"github.com/SpecterOps/AzureHound/v2/constants"
 	"github.com/SpecterOps/AzureHound/v2/models/azure"
 )
@@ -57,6 +58,25 @@ func (s *azureClient) ListAzureADGroupOwners(ctx context.Context, objectId strin
 	go getAzureObjectList[json.RawMessage](s.msgraph, ctx, path, params, out)
 
 	return out
+}
+
+// GetAzureADGroupOnPremisesSyncBehavior resolves a group's cloud source-of-authority state (isCloudManaged) from its
+// onPremisesSyncBehavior navigation property. This is a per-group GET because the property is not returned on the
+// group resource and does not support $expand.
+// https://learn.microsoft.com/en-us/graph/api/onpremisessyncbehavior-get?view=graph-rest-beta
+func (s *azureClient) GetAzureADGroupOnPremisesSyncBehavior(ctx context.Context, objectId string) (*azure.OnPremisesSyncBehavior, error) {
+	var (
+		path     = fmt.Sprintf("/%s/groups/%s/onPremisesSyncBehavior", constants.GraphApiBetaVersion, objectId)
+		response azure.OnPremisesSyncBehavior
+	)
+
+	if res, err := s.msgraph.Get(ctx, path, query.GraphParams{Select: []string{"id", "isCloudManaged"}}, nil); err != nil {
+		return nil, err
+	} else if err := rest.Decode(res.Body, &response); err != nil {
+		return nil, err
+	} else {
+		return &response, nil
+	}
 }
 
 // ListAzureADGroupMembers https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-beta
